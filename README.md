@@ -10,9 +10,9 @@ needed for Trusted Publishing.
 ## Install
 
 ```bash
-uv tool install ghafi-cli
+uv tool install ghafi
 # or
-pip install ghafi-cli
+pip install ghafi
 ```
 
 ## Usage

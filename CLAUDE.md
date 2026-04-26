@@ -14,11 +14,11 @@ Path references in this file assume `ghafi` is checked out **alongside** its sib
 
 ## Project shape
 
-Distributed as **`ghafi-cli`** on PyPI (Trusted Publishing). The Python package is `ghafi`; the binary is `ghafi`. Layout follows the afi-cli pattern (top-level package, no `src/`):
+Distributed as **`ghafi`** on PyPI (Trusted Publishing). The Python package, the PyPI distribution, and the installed binary all share the same name (mirrors `cfafi`'s convention). Layout follows the afi-cli pattern (top-level package, no `src/`):
 
 ```text
-ghafi/                       # Python package (pip install ghafi-cli)
-├── __init__.py              # __version__ via importlib.metadata("ghafi-cli")
+ghafi/                       # Python package (pip install ghafi)
+├── __init__.py              # __version__ via importlib.metadata("ghafi")
 ├── __main__.py              # python -m ghafi
 ├── _api.py                  # urllib-only GitHub REST client
 ├── _env.py                  # GITHUB_TOKEN → GH_TOKEN resolution
@@ -49,7 +49,7 @@ CHANGELOG.md                 # Keep-a-Changelog
 - **Tests:** `uv run pytest -n auto -v`. CI runs on every PR + push to main; coverage gate is 60%.
 - **Lint:** `uv run black --check ghafi tests`, `uv run isort --check-only ghafi tests`, `uv run flake8 ghafi tests`, `uv run bandit -c pyproject.toml -r ghafi`, `markdownlint-cli2 "**/*.md"`, `bash .claude/skills/pr-review/scripts/portability-lint.sh`.
 - **Version bump:** `python3 .claude/skills/version-bump/scripts/bump.py {patch|minor|major}` — updates `pyproject.toml` and prepends a CHANGELOG entry. **Required on every PR** (the `version-check` CI job comments and fails when the PR version equals main's).
-- **Publish:** push to `main` triggers `.github/workflows/publish.yml` → `uv build` → publishes `ghafi-cli` to PyPI via Trusted Publishing (no API tokens). PRs publish a `.dev<run_number>` to TestPyPI for smoke-testing. Fork PRs are skipped (no OIDC context).
+- **Publish:** push to `main` triggers `.github/workflows/publish.yml` → `uv build` → publishes `ghafi` to PyPI via Trusted Publishing (no API tokens). PRs publish a `.dev<run_number>` to TestPyPI for smoke-testing. Fork PRs are skipped (no OIDC context).
 
 ## GitHub authentication
 

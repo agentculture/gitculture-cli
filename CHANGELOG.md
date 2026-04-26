@@ -9,7 +9,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `pyproject.toml` (`ghafi-cli`, hatchling, zero runtime deps, Python ≥3.12).
+- `pyproject.toml` (`ghafi`, hatchling, zero runtime deps, Python ≥3.12).
 - `ghafi/` package with `__main__.py` and version read from package metadata.
 - `ghafi/cli/` afi-cli-shaped scaffold: `_GhafiArgumentParser`, `_dispatch`,
   `GhafiError` with five-code policy (success / user / env / auth / API),

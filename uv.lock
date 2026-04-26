@@ -178,7 +178,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ghafi-cli"
+name = "ghafi"
 version = "0.0.1"
 source = { editable = "." }
 

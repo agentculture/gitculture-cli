@@ -1,5 +1,5 @@
 [project]
-name = "ghafi-cli"
+name = "ghafi"
 version = "0.0.1"
 description = "ghafi — GitHub Agent First Interface; an AgentCulture manager."
 readme = "README.md"
