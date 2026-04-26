@@ -19,12 +19,7 @@ import shutil
 import subprocess
 
 import ghafi._api as _api
-from ghafi.cli._errors import (
-    EXIT_API_ERROR,
-    EXIT_ENV_ERROR,
-    EXIT_USER_ERROR,
-    GhafiError,
-)
+from ghafi.cli._errors import EXIT_API_ERROR, EXIT_ENV_ERROR, GhafiError
 from ghafi.cli._output import emit_diagnostic, emit_json, emit_kv, emit_result
 
 # --------------------------------------------------------------------------- #
@@ -375,9 +370,9 @@ def _resolve_owner_for_env() -> str:
     login = user.get("login")
     if not login:
         raise GhafiError(
-            code=EXIT_USER_ERROR,
-            message="--owner not given and GET /user has no 'login'",
-            remediation="pass --owner <login>",
+            code=EXIT_API_ERROR,
+            message="GET /user response missing 'login' (cannot infer --owner)",
+            remediation="check token validity with `ghafi whoami`, or pass --owner <login>",
         )
     return str(login)
 

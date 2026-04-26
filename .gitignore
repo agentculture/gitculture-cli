@@ -208,3 +208,6 @@ __marimo__/
 
 # Claude Code per-machine permissions (machine-specific paths inside)
 .claude/settings.local.json
+
+# Claude Code scheduled-task runtime artifact
+.claude/scheduled_tasks.lock

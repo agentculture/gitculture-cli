@@ -72,9 +72,22 @@ def bump(version: str, part: str) -> str:
 
 
 def write_version(path: Path, old: str, new: str) -> None:
-    """Replace old version with new in pyproject.toml."""
+    """Replace old version with new in pyproject.toml.
+
+    Uses the same whitespace-tolerant regex as ``read_version`` so a
+    non-canonical line (e.g. ``version="x.y.z"``) round-trips correctly.
+    Aborts if the regex did not match — silent no-op would leave
+    pyproject.toml and CHANGELOG.md inconsistent.
+    """
     text = path.read_text()
-    updated = text.replace(f'version = "{old}"', f'version = "{new}"', 1)
+    pattern = re.compile(r'^(version\s*=\s*")([^"]+)(")', re.MULTILINE)
+    updated, n = pattern.subn(rf'\g<1>{new}\g<3>', text, count=1)
+    if n == 0:
+        print(
+            f"ERROR: could not rewrite version line in {path} (read='{old}')",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     path.write_text(updated)
 
 

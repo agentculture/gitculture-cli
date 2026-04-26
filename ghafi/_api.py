@@ -79,6 +79,7 @@ def _raise_http_error(exc: urllib.error.HTTPError) -> NoReturn:
     code_category = EXIT_AUTH_ERROR if exc.code in (401, 403) else EXIT_API_ERROR
     remediation = (
         "verify your GITHUB_TOKEN scopes (need `repo` for repo create, "
+        "`admin:repo_hook` for environments and Actions permissions, "
         "and `admin:org` for org repos)"
         if code_category == EXIT_AUTH_ERROR
         else f"HTTP {exc.code} from GitHub: {data.get('documentation_url', 'no docs URL')}"

@@ -1,7 +1,7 @@
-# markdownlint-cli2 config for steward.
-# markdownlint-cli2 stops walking at the git root, so the user's global
-# ~/.markdownlint-cli2.yaml isn't picked up from inside the repo.
-# Mirrors the afi-cli / cfafi preset for workspace consistency.
+# markdownlint-cli2 config for ghafi.
+# markdownlint-cli2 stops walking at the git root, so any user-global
+# config in the home directory is not picked up from inside the repo.
+# Mirrors the afi-cli / cfafi / steward preset for workspace consistency.
 
 config:
   default: true
