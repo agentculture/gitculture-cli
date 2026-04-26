@@ -1,35 +1,25 @@
-### CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
 
-**ghafi** — GitHub CLI and agent; an AgentCulture manager.
+**ghafi** — GitHub CLI and agent; an AgentCulture manager (per `README.md`).
 
-The repo is at the scaffolding stage: only `README.md`, `LICENSE`, and `.gitignore` exist. There is no source code, build system, test suite, or version manifest yet. Treat any "command to run" question as unanswered until the relevant tooling is actually added — do not invent commands.
+The repo is at the scaffolding stage. There is no source code, build system, test suite, or version manifest yet. Treat any "command to run" question as unanswered until the relevant tooling is actually added — do not invent commands.
 
-## Context within the workspace
+## Workspace context (tentative)
 
-`/home/spark/git/` is a multi-project workspace (see `/home/spark/git/CLAUDE.md`). ghafi sits alongside the **culture** project ("IRC-based agent mesh where AI agents collaborate peer-to-peer"); ghafi's tagline "AgentCulture manager" suggests it is intended as a GitHub-side companion / management CLI for that mesh. When designing APIs, naming, or workflows here, look at `culture/` for the conventions ghafi will need to interoperate with — especially the all-backends rule (`claude` / `codex` / `copilot` / `acp` parity) if ghafi ends up wrapping agent backends.
+This repository may be checked out as part of a larger multi-project workspace. If so, consult the workspace-root docs for shared conventions; nothing in *this* repo currently proves any particular sibling-project relationships, interoperability requirements, or backend-parity rules.
 
-## Toolchain (implied, not yet in tree)
+The README's tagline ("AgentCulture manager") suggests ghafi is intended as a GitHub-side companion to an agent-mesh project, but treat that as author intent rather than a requirement until matching code or specs land in-tree.
 
-The `.gitignore` is the standard Python template (`__pycache__/`, `*.egg-info/`, `build/`, `dist/`, `.venv/`, etc.), so this is a Python project. Workspace convention is **uv** for dependency management:
+## Toolchain (TBD; not yet declared in-tree)
 
-```bash
-uv venv && uv pip install -e ".[dev]"
-pytest
-```
+The current tree does not declare a toolchain. The `.gitignore` is largely Python-oriented, but that alone is not enough to commit to a language or package manager.
 
-Adopt the same when adding `pyproject.toml`. Don't introduce a different package manager (poetry, pipenv, plain pip-tools) without a reason.
-
-## Conventions inherited from the workspace
-
-- **Linting (Python):** `flake8`, `pylint`, `bandit -r src/`, `black`, `isort`.
-- **Linting (Markdown):** `markdownlint-cli2 "path/to/file.md"` (config at `~/.markdownlint-cli2.yaml`).
-- **Versioning:** sibling projects (culture, daria) use a `/version-bump` slash command that updates `pyproject.toml` + `__init__.py` + `CHANGELOG.md` before each PR; mirror that pattern once a version manifest exists.
-- **Git workflow:** branch → implement → bump version → PR → address review → merge.
+When a toolchain is chosen, document it here — entry point, install command, test command, lint command — and remove this TBD note. Until then, do not add runnable setup/test command blocks to this file.
 
 ## When the repo grows
 
-Update this file with the *non-obvious* things future Claude instances will need: the actual CLI entry point, how ghafi authenticates to GitHub, how it discovers/talks to a culture mesh, and any invariants (e.g., "ghafi never writes to a repo without `--confirm`"). Skip anything discoverable from a 30-second `ls` or `pyproject.toml` read.
+Update this file with the *non-obvious* things future Claude instances will need: the actual CLI entry point, how ghafi authenticates to GitHub, what (if anything) it manages on the AgentCulture side, and any invariants (e.g., "ghafi never writes to a repo without `--confirm`"). Skip anything discoverable from a 30-second `ls` or `pyproject.toml` read, and prefer repo-relative references over absolute or home-directory paths so the guidance stays portable across contributors and CI.
