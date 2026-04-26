@@ -1,0 +1,11 @@
+# Per-machine config for ghafi's skills.
+# Copy this to skills.local.yaml (git-ignored) and adjust for your environment.
+# Skills read skills.local.yaml first, falling back to this example.
+
+# Sibling project paths checked during the pr-review alignment-delta step.
+# Workspace-relative paths (../foo) are preferred. Skills skip entries
+# that don't exist on disk, so commenting out missing ones isn't required.
+sibling_projects:
+  - ../afi-cli
+  - ../cfafi
+  - ../steward
