@@ -55,19 +55,55 @@ CHANGELOG.md                 # Keep-a-Changelog
 
 `ghafi` reads the token from `GITHUB_TOKEN` first, falling back to `GH_TOKEN`. There is **no `gh` CLI fallback in the Python layer** — `ghafi` is stdlib-only (zero runtime deps) and uses `urllib` directly. If both env vars are unset, every GitHub-touching verb exits `2` with a remediation hint pointing at this file.
 
-Required scopes:
+If you have `gh` authenticated but no PAT exported, bridge it for one command: `GITHUB_TOKEN=$(gh auth token) ghafi <verb> …`. Or export it for the shell: `export GITHUB_TOKEN=$(gh auth token)`. This keeps ghafi stdlib-only while leveraging your existing `gh` session.
 
-- `repo` — create user-owned repositories.
-- `admin:repo_hook` — manage Actions permissions and Environments.
-- `admin:org` — additional, only when creating org-owned repositories.
+Required scopes (verified against the v0.x verb set):
+
+- `repo` — create user-owned repositories, manage Environments (PUT `/repos/{owner}/{repo}/environments/{name}`), and write Actions repository permissions (PUT `/repos/{owner}/{repo}/actions/permissions`, used by `repo create` to enable workflows). All three accept classic-PAT `repo` per GitHub REST docs; this is what `gh auth login` gives you by default.
+- `admin:org` — only when creating **org-owned** repositories (org membership with create-repo permission is the actual gate; the scope is required for some org configurations).
+- `admin:repo_hook` — **not currently needed** by any v0.x verb. Would be required only if ghafi grew verbs that manage repository webhooks; the existing Environments and Actions-permissions endpoints both accept `repo` alone.
 
 ## Mutation safety contract
 
-Every verb that writes to GitHub **defaults to dry-run**. Pass `--apply` to commit. In dry-run, `ghafi` prints the JSON body it would POST/PUT and exits 0. This is enforced in code review (no automated check yet — flag it manually for any new mutating verb). Rationale: agents call `ghafi` in loops; safe defaults are the difference between a useful tool and a foot-gun.
+Every verb that writes to GitHub **defaults to dry-run**. Pass `--apply` to commit. In dry-run, `ghafi` prints the JSON body it would POST/PUT and exits 0. This is enforced both in code review and by `tests/test_mutation_safety.py`, which walks the argparse tree to assert every mutating verb exposes `--apply` defaulting to False and performs no HTTP writes (or `subprocess.run` invocations) without it. Add new mutating verbs to that test's `MUTATING_VERBS` list. Rationale: agents call `ghafi` in loops; safe defaults are the difference between a useful tool and a foot-gun.
 
 ## Trusted Publishing
 
 `ghafi repo env` creates the GitHub-side Environment only. The PyPI side — registering the trusted publisher on pypi.org / test.pypi.org — is a one-time web flow per project; see <https://docs.pypi.org/trusted-publishers/>. Environments created by `ghafi repo env` store no secrets and configure no reviewers, since OIDC carries the auth.
+
+## Bootstrap walkthrough (new sibling)
+
+From "no repo" to "Trusted-Publishing-ready sibling" in four automated steps plus one manual web-flow step. Each ghafi `--apply` step prints the JSON body in dry-run first; review before adding the flag.
+
+1. **Create on GitHub**
+
+   ```bash
+   ghafi repo create --org agentculture --description "<one-liner>" <name>           # dry-run
+   ghafi repo create --org agentculture --description "<one-liner>" <name> --apply
+   ```
+
+2. **Clone locally as a sibling**
+
+   ```bash
+   git clone https://github.com/agentculture/<name>.git ../<name>
+   ```
+
+3. **Cite the afi-cli reference template** — note this **does not** instantiate a runnable project; it writes the template into `.afi/reference/python-cli/` (the cite-don't-import pattern). You instantiate `{{slug}}/` into the actual package separately.
+
+   ```bash
+   ghafi repo scaffold --apply ../<name>
+   ```
+
+4. **Create both Trusted Publishing environments**
+
+   ```bash
+   ghafi repo env --owner agentculture --name pypi --branch main --apply <name>
+   ghafi repo env --owner agentculture --name testpypi --apply <name>
+   ```
+
+5. **Manual (one-time per project, web only):** register the trusted publisher on <https://pypi.org/manage/account/publishing/> and <https://test.pypi.org/manage/account/publishing/>, pointing at `agentculture/<name>`, workflow `publish.yml`, environment `pypi` (and `testpypi` on the test side).
+
+A `.claude/skills/bootstrap-sibling/scripts/bootstrap.sh` helper drives the full flow with a confirmation gate: it dry-runs the GitHub mutations first, then on `--apply` runs `repo create`, performs the local `git clone`, runs `repo scaffold`, and creates the `pypi` and `testpypi` environments as separate calls.
 
 ## Conventions in use
 
