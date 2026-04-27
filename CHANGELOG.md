@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/). This project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.2] - 2026-04-27
+
+### Added
+
+- doc/test alignment skill (`.claude/skills/doc-test-align/`) — drift detector for CLAUDE.md endpoint and verb claims
+- bootstrap-sibling skill (`.claude/skills/bootstrap-sibling/`) — chains the four-step sibling bootstrap with dry-run-then-apply gates
+- mutation-safety pytest module — asserts every mutating verb has --apply defaulting to False and performs no writes in dry-run
+- Bootstrap walkthrough section in CLAUDE.md covering the four-step path from no-repo to Trusted-Publishing-ready
+
+### Changed
+
+- CLAUDE.md GitHub authentication: `repo` scope is sufficient for Environments (per GitHub REST docs); `admin:repo_hook` is no longer claimed required for v0.x verbs
+- CLAUDE.md GitHub authentication: documented `GITHUB_TOKEN=$(gh auth token)` bridge for users with gh authenticated but no PAT exported
+
+### Fixed
+
+- Empirically incorrect scope claim for `ghafi repo env` — verified against agentculture/irc-lens bootstrap
+
 ## [0.0.1] - 2026-04-26
 
 ### Added

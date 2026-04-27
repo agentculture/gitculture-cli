@@ -55,11 +55,13 @@ CHANGELOG.md                 # Keep-a-Changelog
 
 `ghafi` reads the token from `GITHUB_TOKEN` first, falling back to `GH_TOKEN`. There is **no `gh` CLI fallback in the Python layer** — `ghafi` is stdlib-only (zero runtime deps) and uses `urllib` directly. If both env vars are unset, every GitHub-touching verb exits `2` with a remediation hint pointing at this file.
 
-Required scopes:
+If you have `gh` authenticated but no PAT exported, bridge it for one command: `GITHUB_TOKEN=$(gh auth token) ghafi <verb> …`. Or export it for the shell: `export GITHUB_TOKEN=$(gh auth token)`. This keeps ghafi stdlib-only while leveraging your existing `gh` session.
 
-- `repo` — create user-owned repositories.
-- `admin:repo_hook` — manage Actions permissions and Environments.
-- `admin:org` — additional, only when creating org-owned repositories.
+Required scopes (verified against the v0.x verb set):
+
+- `repo` — create user-owned repositories **and manage Environments** (PUT `/repos/{owner}/{repo}/environments/{name}` accepts classic-PAT `repo` per GitHub REST docs; this is what `gh auth login` gives you by default).
+- `admin:org` — only when creating **org-owned** repositories (org membership with create-repo permission is the actual gate; the scope is required for some org configurations).
+- `admin:repo_hook` — **not currently needed** by any v0.x verb. Will be required if/when ghafi grows verbs that write Actions repository permissions or webhooks.
 
 ## Mutation safety contract
 
@@ -68,6 +70,40 @@ Every verb that writes to GitHub **defaults to dry-run**. Pass `--apply` to comm
 ## Trusted Publishing
 
 `ghafi repo env` creates the GitHub-side Environment only. The PyPI side — registering the trusted publisher on pypi.org / test.pypi.org — is a one-time web flow per project; see <https://docs.pypi.org/trusted-publishers/>. Environments created by `ghafi repo env` store no secrets and configure no reviewers, since OIDC carries the auth.
+
+## Bootstrap walkthrough (new sibling)
+
+The four-step path from "no repo" to "Trusted-Publishing-ready sibling." Each `--apply` step prints the JSON body in dry-run first; review before adding the flag.
+
+1. **Create on GitHub**
+
+   ```bash
+   ghafi repo create --org agentculture --description "<one-liner>" <name>           # dry-run
+   ghafi repo create --org agentculture --description "<one-liner>" <name> --apply
+   ```
+
+2. **Clone locally as a sibling**
+
+   ```bash
+   git clone https://github.com/agentculture/<name>.git ../<name>
+   ```
+
+3. **Cite the afi-cli reference template** — note this **does not** instantiate a runnable project; it writes the template into `.afi/reference/python-cli/` (the cite-don't-import pattern). You instantiate `{{slug}}/` into the actual package separately.
+
+   ```bash
+   ghafi repo scaffold --apply ../<name>
+   ```
+
+4. **Create both Trusted Publishing environments**
+
+   ```bash
+   ghafi repo env --owner agentculture --name pypi --branch main --apply <name>
+   ghafi repo env --owner agentculture --name testpypi --apply <name>
+   ```
+
+5. **Manual (one-time per project, web only):** register the trusted publisher on <https://pypi.org/manage/account/publishing/> and <https://test.pypi.org/manage/account/publishing/>, pointing at `agentculture/<name>`, workflow `publish.yml`, environment `pypi` (and `testpypi` on the test side).
+
+A `.claude/skills/bootstrap-sibling/scripts/bootstrap.sh` helper chains steps 1, 3, and 4 in order with confirmation gates.
 
 ## Conventions in use
 
