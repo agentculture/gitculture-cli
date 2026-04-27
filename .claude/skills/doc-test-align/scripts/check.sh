@@ -52,8 +52,12 @@ echo
 
 echo "=== Check 2: bootstrap walkthrough verbs match registered verbs ==="
 # Introspect the live parser instead of regex'ing source — robust to
-# multi-line add_parser() calls.
-registered=$(uv run python -c '
+# multi-line add_parser() calls. If introspection fails (uv missing,
+# import error, etc.) exit 2 so the failure is actionable rather than
+# masquerading as drift.
+introspect_stderr=$(mktemp)
+trap 'rm -f "$introspect_stderr"' EXIT
+if ! registered=$(uv run python -c '
 import argparse
 from ghafi.cli import _build_parser
 p = _build_parser()
@@ -61,7 +65,12 @@ sub = next(a for a in p._actions if isinstance(a, argparse._SubParsersAction))
 repo = sub.choices["repo"]
 sub2 = next(a for a in repo._actions if isinstance(a, argparse._SubParsersAction))
 print("\n".join(sorted(sub2.choices.keys())))
-' 2>/dev/null | sort -u)
+' 2>"$introspect_stderr"); then
+  echo "  ERROR: parser introspection failed:" >&2
+  sed 's/^/    /' "$introspect_stderr" >&2
+  exit 2
+fi
+registered=$(echo "$registered" | sort -u)
 mentioned=$(grep -oE 'ghafi repo [a-z]+' "$CLAUDE_MD" \
             | awk '{print $3}' | sort -u || true)
 echo "  registered: $(echo "$registered" | tr '\n' ' ')"

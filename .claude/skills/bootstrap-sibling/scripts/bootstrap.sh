@@ -18,8 +18,8 @@ Usage:
 
 Without --apply, every ghafi step prints its dry-run output and the
 script exits before performing any mutation. With --apply, the script
-performs all four mutations in order, with a confirmation prompt after
-the dry-run review.
+runs the full bootstrap (repo create, local clone, scaffold, env pypi,
+env testpypi) with a confirmation prompt after the dry-run review.
 EOF
 }
 
@@ -53,7 +53,8 @@ if [[ -z "${GITHUB_TOKEN:-}" && -z "${GH_TOKEN:-}" ]]; then
 fi
 
 GHAFI=(uv run ghafi)
-TARGET="$(cd "$(dirname "$0")/../../../.." && pwd)/$NAME"
+REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+TARGET="$REPO_ROOT/../$NAME"
 
 echo "=== Plan ==="
 echo "  org:           $ORG"
@@ -83,7 +84,7 @@ if [[ -z "$APPLY" ]]; then
 fi
 
 # Confirmation gate before applying.
-read -r -p "Apply all four mutations? [y/N] " confirm
+read -r -p "Apply the bootstrap (create + clone + scaffold + 2× env)? [y/N] " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "Aborted."
   exit 1
