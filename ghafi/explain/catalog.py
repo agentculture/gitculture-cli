@@ -20,6 +20,7 @@ bootstrapping and maintaining sibling repositories on GitHub.
 - `ghafi repo create <name>` — create a new repository.
 - `ghafi repo scaffold <path>` — drop the afi-cli python-cli template.
 - `ghafi repo env <repo>` — create a Trusted-Publishing environment.
+- `ghafi overview <org>` — org Actions minute-quota usage (read-only).
 
 ## Mutation safety
 
@@ -46,6 +47,7 @@ commit. In dry-run, ghafi prints the JSON body it would send.
 - `ghafi explain repo scaffold`
 - `ghafi explain repo env`
 - `ghafi explain whoami`
+- `ghafi explain overview`
 """
 
 _LEARN = """\
@@ -207,6 +209,44 @@ one-time web flow per project. See:
 """
 
 
+_OVERVIEW = """\
+# ghafi overview <org> [--month YYYY-MM] [--repo NAME] [--json]
+
+Read-only audit of an org's GitHub Actions minute-quota usage — answers
+"why are we near our included-minutes limit".
+
+## What it does
+
+1. Lists `/orgs/{org}/repos` to learn which repos are private.
+2. Reads the enhanced-billing usage report
+   (`GET /organizations/{org}/settings/billing/usage?year=&month=`).
+3. Keeps only the PRIVATE repos (public repos get unlimited free minutes
+   and never touch the quota) and weights each by runner-OS multiplier:
+   Linux ×1, Windows ×2, macOS ×10. A small macOS matrix leg can outrank
+   a busy Linux repo — that is the signal to act on.
+
+With `--repo NAME` it instead reads `/repos/{org}/{repo}/actions/runs`
+and groups the most recent 100 runs by workflow + trigger event, plus the
+month's total run count — to explain *why* one repo is heavy.
+
+## Scope
+
+Needs `admin:org` — the billing-usage endpoint returns 403 for `read:org`
+alone, and the legacy `/settings/billing/actions` endpoint is retired
+(HTTP 410). The repo + runs reads are covered by `repo`.
+
+## JSON shape (org mode)
+
+    {
+      "org": str, "month": "YYYY-MM",
+      "repos": [{"repo": str, "weighted": int, "raw": int}, ...],
+      "private_total_weighted": int,
+      "private_total_raw": int,
+      "public_total_raw": int
+    }
+"""
+
+
 ENTRIES: dict[tuple[str, ...], str] = {
     (): _ROOT,
     ("ghafi",): _ROOT,
@@ -217,4 +257,5 @@ ENTRIES: dict[tuple[str, ...], str] = {
     ("repo", "create"): _REPO_CREATE,
     ("repo", "scaffold"): _REPO_SCAFFOLD,
     ("repo", "env"): _REPO_ENV,
+    ("overview",): _OVERVIEW,
 }

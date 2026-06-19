@@ -47,6 +47,7 @@ def _build_parser() -> argparse.ArgumentParser:
     # Deferred imports keep cli import-side effects tight.
     from ghafi.cli._commands import explain as _explain
     from ghafi.cli._commands import learn as _learn
+    from ghafi.cli._commands import overview as _overview
     from ghafi.cli._commands import repo as _repo
     from ghafi.cli._commands import whoami as _whoami
 
@@ -65,6 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _explain.register(sub)
     _whoami.register(sub)
     _repo.register(sub)
+    _overview.register(sub)
 
     return parser
 

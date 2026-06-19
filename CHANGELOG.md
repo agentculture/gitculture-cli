@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/). This project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-06-19
+
+### Added
+
+- `ghafi overview <org>` — org GitHub Actions minute-quota usage breakdown. Joins the enhanced-billing usage report against repo privacy and weights by runner-OS multiplier (Linux ×1, Windows ×2, macOS ×10); only private repos count against the quota. `--repo NAME` drills into one repo's workflow-run counts by trigger event. Read-only (no --apply). Needs the `admin:org` scope.
+- actions-usage skill (`.claude/skills/actions-usage/`) — shell/gh/jq companion to `ghafi overview` for the same audit
+
 ## [0.0.2] - 2026-04-27
 
 ### Added
