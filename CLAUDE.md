@@ -30,7 +30,8 @@ ghafi/                       # Python package (pip install ghafi)
 │       ├── learn.py         # ghafi learn (and --json)
 │       ├── explain.py       # ghafi explain <path>
 │       ├── whoami.py        # GET /user
-│       └── repo.py          # repo create / scaffold / env (sub-subparsers)
+│       ├── repo.py          # repo create / scaffold / env (sub-subparsers)
+│       └── overview.py      # org Actions minute-quota usage (read-only)
 └── explain/
     ├── __init__.py          # resolve(path) → markdown
     └── catalog.py           # ENTRIES (path-tuple → markdown)
@@ -45,7 +46,7 @@ CHANGELOG.md                 # Keep-a-Changelog
 ## Build / test / publish
 
 - **Install for dev:** `uv sync`.
-- **Run CLI from source:** `uv run ghafi --version`, `uv run ghafi learn`, `uv run python -m ghafi whoami`.
+- **Run CLI from source:** `uv run ghafi --version`, `uv run ghafi learn`, `uv run python -m ghafi whoami`, `uv run ghafi overview agentculture`.
 - **Tests:** `uv run pytest -n auto -v`. CI runs on every PR + push to main; coverage gate is 60%.
 - **Lint:** `uv run black --check ghafi tests`, `uv run isort --check-only ghafi tests`, `uv run flake8 ghafi tests`, `uv run bandit -c pyproject.toml -r ghafi`, `markdownlint-cli2 "**/*.md"`, `bash .claude/skills/pr-review/scripts/portability-lint.sh`.
 - **Version bump:** `python3 .claude/skills/version-bump/scripts/bump.py {patch|minor|major}` — updates `pyproject.toml` and prepends a CHANGELOG entry. **Required on every PR** (the `version-check` CI job comments and fails when the PR version equals main's).
@@ -60,7 +61,7 @@ If you have `gh` authenticated but no PAT exported, bridge it for one command: `
 Required scopes (verified against the v0.x verb set):
 
 - `repo` — create user-owned repositories, manage Environments (PUT `/repos/{owner}/{repo}/environments/{name}`), and write Actions repository permissions (PUT `/repos/{owner}/{repo}/actions/permissions`, used by `repo create` to enable workflows). All three accept classic-PAT `repo` per GitHub REST docs; this is what `gh auth login` gives you by default.
-- `admin:org` — only when creating **org-owned** repositories (org membership with create-repo permission is the actual gate; the scope is required for some org configurations).
+- `admin:org` — required by **two** surfaces: (1) creating **org-owned** repositories (org membership with create-repo permission is the actual gate; the scope is required for some org configurations), and (2) `ghafi overview`, which reads the enhanced-billing usage report (GET `/organizations/{org}/settings/billing/usage`) — `read:org` alone returns 403 there, and the legacy `/settings/billing/actions` endpoint was retired (HTTP 410). `overview` also reads `/orgs/{org}/repos` (privacy join) and, with `--repo`, `/repos/{owner}/{repo}/actions/runs` — both covered by `repo`.
 - `admin:repo_hook` — **not currently needed** by any v0.x verb. Would be required only if ghafi grew verbs that manage repository webhooks; the existing Environments and Actions-permissions endpoints both accept `repo` alone.
 
 ## Mutation safety contract
