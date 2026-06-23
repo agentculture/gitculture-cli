@@ -10,7 +10,8 @@ description: >
   passively reinforces matched records (bumps last_recall + recall_count).
   Shadowed and archived records are excluded by default; use
   --include-shadowed / --include-archived to retrieve them. The store lives at
-  ~/.eidetic/memory (a home-dir path outside any git worktree); the wrapper
+  a repo-local ./.eidetic (rooted at the main worktree, shared across linked
+  worktrees so the colleague backend reads the same store); the wrapper
   defaults queries to this agent's PERSONAL, PRIVATE scope (`--scope ghafi
   --visibility private`, suffix read from culture.yaml) — matching where
   /remember writes — so a no-flag recall returns this agent's own private records
@@ -31,7 +32,8 @@ surface; the write half is the sibling **/remember** skill.
 
 The point of a *shared* store is that memory is a **team faculty**, not a
 per-agent silo: a record Claude wrote is recallable by the colleague backend
-(and vice versa), because both resolve the same `~/.eidetic/memory` path.
+(and vice versa), because both resolve the same `./.eidetic` store (rooted at
+the main worktree via git's common dir, so linked worktrees share it).
 
 ## How to run
 
@@ -81,7 +83,7 @@ Every `recall` hit carries a `signal` field (float in `[0, 1]`). The signal
 blends **multiplicatively** into the lexical/vector score so recently-created
 and frequently-recalled records surface ahead of stale ones. The formula:
 
-```
+```text
 access_bonus = min(0.5, recall_count * 0.05)
 age_factor   = 1 / (1 + days_since_creation * 0.01)
 staleness    = days_since_last_recall * 0.01
@@ -168,11 +170,12 @@ bash .claude/skills/recall/scripts/recall.sh "power" --include-archived --includ
   matches. `approximate` keeps every candidate ranked by raw cosine, so it can
   return low/near-zero scores when the store is small — lower `--top-k` to trim.
   A `--min-score` threshold is a tracked follow-up.
-- **Sharing scope = one OS user.** The default store is `~/.eidetic/memory`, so
-  every agent/process running as the *same* OS user shares it (that is the point —
-  Claude + colleague). It is not isolated between OS users by anything but file
-  permissions; keep genuinely private data in a `--visibility private` scope and
-  treat the host as the trust boundary.
+- **Sharing scope = one repo checkout.** The default store is the repo-local
+  `./.eidetic`, rooted at the main worktree, so every agent/process working in
+  that checkout or a linked worktree shares it (that is the point — Claude +
+  colleague). A *different* clone of the repo has its own store. Keep genuinely
+  private data in a `--visibility private` scope and treat the checkout (and the
+  host it lives on) as the trust boundary.
 
 ## Provenance
 

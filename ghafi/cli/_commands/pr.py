@@ -95,7 +95,10 @@ def _build_search_query(org: str, state: str, title: str | None) -> str:
     if state in ("open", "closed"):
         parts.append(f"state:{state}")
     if title:
-        parts.append(f'in:title "{title.strip()}"')
+        # Escape backslashes then quotes so an embedded `"` can't terminate the
+        # in:title phrase early or inject extra Search qualifiers.
+        escaped = title.strip().replace("\\", "\\\\").replace('"', '\\"')
+        parts.append(f'in:title "{escaped}"')
     return " ".join(parts)
 
 
@@ -201,6 +204,15 @@ def _resolve_owner_repo(args: argparse.Namespace) -> tuple[str, str]:
     raw = str(args.repo)
     if "/" in raw:
         owner, _, name = raw.partition("/")
+        if not owner or not name or "/" in name:
+            raise GhafiError(
+                code=EXIT_USER_ERROR,
+                message=f"invalid repo {raw!r}: expected exactly one owner/repo",
+                remediation=(
+                    "use owner/repo (one slash, both parts non-empty), "
+                    "or a bare name with --owner"
+                ),
+            )
         return owner, name
     if not args.owner:
         raise GhafiError(
@@ -360,6 +372,19 @@ def cmd_pr_merge(args: argparse.Namespace) -> None:
                 ),
             ) from None
         raise
+
+    # A 200 response does not guarantee the merge happened — GitHub returns a
+    # `merged` boolean. Treat merged != true as a failure so callers (and the
+    # mass-merge skill, which counts on exit status) never over-count.
+    if not response.get("merged", False):
+        raise GhafiError(
+            code=EXIT_API_ERROR,
+            message=(
+                f"GitHub did not merge {owner}/{repo}#{args.number}: "
+                f"{response.get('message') or 'response reported merged=false'}"
+            ),
+            remediation="re-check the PR state — the merge did not complete",
+        )
 
     if json_mode:
         emit_json(

@@ -249,6 +249,37 @@ def test_pr_merge_method_rebase(http_stub):
     assert http_stub.calls[-1][2] == {"merge_method": "rebase"}
 
 
+def test_pr_merge_merged_false_is_failure(capsys, http_stub):
+    """A 200 with merged=false must be a failure, not a phantom success."""
+    http_stub.set(
+        "PUT",
+        f"/repos/{ORG}/lobes-cli/pulls/61/merge",
+        {"merged": False, "message": "Base branch was modified. Review and try the merge again."},
+    )
+    rc = main(["pr", "merge", f"{ORG}/lobes-cli", "61", "--apply"])
+    err = capsys.readouterr().err
+    assert rc == EXIT_API_ERROR
+    assert "did not merge" in err.lower()
+    assert "base branch was modified" in err.lower()
+
+
+def test_pr_list_escapes_quotes_in_title(http_stub):
+    """An embedded quote in --title must be escaped in the in:title qualifier."""
+    http_stub.set("GET", SEARCH_PATH, {"total_count": 0, "items": []})
+    main(["pr", "list", ORG, "--title", 'fix "the" bug'])
+    q = http_stub.calls[0][3]["q"]
+    assert r'in:title "fix \"the\" bug"' in q
+
+
+def test_pr_approve_rejects_malformed_owner_repo(capsys):
+    """owner/, /repo, and a/b/c are user errors, not invalid API calls."""
+    for bad in ["agentculture/", "/katvan", "a/b/c"]:
+        rc = main(["pr", "approve", bad, "4", "--apply"])
+        err = capsys.readouterr().err
+        assert rc == EXIT_USER_ERROR, bad
+        assert "invalid repo" in err.lower(), bad
+
+
 def test_pr_merge_not_mergeable_maps_to_clear_error(capsys, http_stub):
     http_stub.set(
         "PUT",

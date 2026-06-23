@@ -19,6 +19,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `tests/test_mutation_safety.py` `MUTATING_VERBS` now includes `pr approve` and `pr merge`, each with a dry-run-no-write behavioral test.
 - CLAUDE.md: documented the `pr` verbs + mass approve/merge flows, the project-shape tree, and the `repo`-scope coverage for PR review/merge/read (fine-grained: "Pull requests: write", "Contents: write" for merge, "Pull requests: read").
+- Relocated the eidetic memory store from the eidetic CLI's home-directory default to a repo-local `./.eidetic` (git-ignored). The `remember`/`recall` wrappers now default `EIDETIC_DATA_DIR` to `<main-worktree>/.eidetic`, rooted at git's common dir so linked worktrees (the colleague backend) still share one store — preserving cross-agent recall while keeping memory inside the repo and out of committed home-directory paths. (This diverges the wrappers from their byte-verbatim eidetic-cli origin by one defaulted env var.)
 
 ### Fixed
 
@@ -31,8 +32,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - **Vendored the `remember` + `recall` memory skills from eidetic-cli**
-  (cite-don't-import) — the write/read halves of eidetic's shared
-  `~/.eidetic/memory` surface, so this agent (Claude and its colleague backend)
+  (cite-don't-import) — the write/read halves of eidetic's shared memory
+  surface, so this agent (Claude and its colleague backend)
   can persist facts across sessions and recall them later, sharing one store.
   `remember` drives `eidetic remember` (idempotent upsert of one JSON record or
   an NDJSON batch on stdin, dedup by id + content hash); `recall` drives

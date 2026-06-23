@@ -12,10 +12,12 @@
 # Upsert is idempotent by id (and dedups by content hash): re-remembering the
 # same record updates it in place, never duplicates.
 #
-# The store is the files backend at ~/.eidetic/memory by default — a home-dir
-# path OUTSIDE any git worktree, so a record Claude remembers is recallable by
-# the colleague backend (which runs in throwaway worktrees), and vice versa.
-# Set EIDETIC_DATA_DIR to opt out of sharing; use --backend mongo|neo4j (with
+# The store is the files backend at a repo-local ./.eidetic by default — rooted
+# at the MAIN worktree (via git's common dir), so a record Claude remembers is
+# recallable by the colleague backend (which runs in throwaway linked worktrees
+# of the same repo), and vice versa, while keeping memory inside the repo rather
+# than the home directory. Outside a git checkout it falls back to the eidetic
+# CLI default. Set EIDETIC_DATA_DIR to override; use --backend mongo|neo4j (with
 # EIDETIC_MONGO_URI / NEO4J_URI) for a server-backed shared store.
 
 set -euo pipefail
@@ -129,6 +131,17 @@ if ! has_flag --scope "$@"; then
         SCOPE_ARGS+=(--scope "$EIDETIC_SCOPE")
         has_flag --visibility "$@" || SCOPE_ARGS+=(--visibility private)
     fi
+fi
+
+# ── default the store to a repo-local .eidetic at the main worktree root ────
+# Keep memory inside the repo (./.eidetic) instead of the home-dir
+# ~/.eidetic/memory. Root it at the common git dir's parent so linked worktrees
+# (the colleague backend) resolve the SAME store, preserving shared recall.
+# Outside a git checkout, leave it unset so eidetic uses its own default.
+if [ -z "${EIDETIC_DATA_DIR:-}" ]; then
+    _ed_common=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse \
+        --path-format=absolute --git-common-dir 2>/dev/null) || _ed_common=""
+    [ -n "$_ed_common" ] && export EIDETIC_DATA_DIR="$(dirname "$_ed_common")/.eidetic"
 fi
 
 : "${EIDETIC_EMBED_URL:=http://localhost:8002/v1}"
