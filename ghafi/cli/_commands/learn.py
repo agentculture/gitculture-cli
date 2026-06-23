@@ -40,6 +40,16 @@ Commands
                              secrets stored. Repeat with --name testpypi
                              for the test environment. Dry-run by
                              default; --apply commits.
+  ghafi overview <org>       Org Actions minute-quota usage (read-only).
+                             Supports --json.
+  ghafi pr list <org>        Find/search PRs in an org (read-only); filter
+                             by --title / --repo / --state. Supports --json.
+  ghafi pr approve <repo> <n> Approve a pull request. Dry-run by default;
+                             --apply submits the review.
+  ghafi pr merge <repo> <n>  Merge a pull request (squash by default) via
+                             the direct merge endpoint — clears non-required
+                             failing checks (e.g. lint). Dry-run by default;
+                             --apply commits.
 
 Mutation safety
 ---------------
@@ -81,6 +91,8 @@ More detail
   ghafi explain repo create
   ghafi explain repo scaffold
   ghafi explain repo env
+  ghafi explain overview
+  ghafi explain pr approve
 
 Homepage: https://github.com/agentculture/ghafi
 """
@@ -110,6 +122,22 @@ def _as_json_payload() -> dict[str, object]:
             {
                 "path": ["repo", "env"],
                 "summary": "Create a Trusted-Publishing environment (pypi or testpypi).",
+            },
+            {
+                "path": ["overview"],
+                "summary": "Org GitHub Actions minute-quota usage (read-only).",
+            },
+            {
+                "path": ["pr", "list"],
+                "summary": "Find/search PRs in an org (read-only); filter by title/repo/state.",
+            },
+            {
+                "path": ["pr", "approve"],
+                "summary": "Approve a PR (dry-run by default; --apply submits the review).",
+            },
+            {
+                "path": ["pr", "merge"],
+                "summary": "Merge a PR, squash by default (dry-run by default; --apply commits).",
             },
         ],
         "exit_codes": {

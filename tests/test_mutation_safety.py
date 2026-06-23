@@ -23,6 +23,8 @@ MUTATING_VERBS: list[list[str]] = [
     ["repo", "create"],
     ["repo", "scaffold"],
     ["repo", "env"],
+    ["pr", "approve"],
+    ["pr", "merge"],
 ]
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
@@ -80,3 +82,19 @@ def test_repo_scaffold_dry_run_does_not_invoke_afi(afi_stub) -> None:
     rc = cli_main(["repo", "scaffold", "/tmp/demo"])
     assert rc == 0
     assert afi_stub.calls == [], f"dry-run leaked subprocess calls: {afi_stub.calls}"
+
+
+def test_pr_approve_dry_run_does_not_call_api(http_stub) -> None:
+    """Behavioral: dry-run `pr approve` performs no HTTP writes."""
+    rc = cli_main(["pr", "approve", "agentculture/demo", "1"])
+    assert rc == 0
+    writes = [(m, p) for (m, p, _payload, _q) in http_stub.calls if m in WRITE_METHODS]
+    assert writes == [], f"dry-run leaked writes: {writes}"
+
+
+def test_pr_merge_dry_run_does_not_call_api(http_stub) -> None:
+    """Behavioral: dry-run `pr merge` performs no HTTP writes."""
+    rc = cli_main(["pr", "merge", "agentculture/demo", "1"])
+    assert rc == 0
+    writes = [(m, p) for (m, p, _payload, _q) in http_stub.calls if m in WRITE_METHODS]
+    assert writes == [], f"dry-run leaked writes: {writes}"

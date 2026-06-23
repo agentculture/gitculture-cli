@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/). This project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-23
+
+### Added
+
+- `ghafi pr list <org>` — read-only PR discovery. Scans the whole org via the GitHub Search API (`/search/issues`, paginated to the 1000-result cap) or one `--repo` via `/repos/{owner}/{repo}/pulls`, then re-checks each title client-side with `--match exact|prefix|substring` (case-insensitive) to kill the Search API's fuzzy false positives. `--state open|closed|all`, `--json` envelope.
+- `ghafi pr approve <owner>/<repo> <number>` — submit an approving review (POST `/repos/{owner}/{repo}/pulls/{number}/reviews`, `event=APPROVE`). Dry-run by default; `--apply` commits. Accepts `owner/repo` or a bare name with `--owner`. Self-authored PRs (HTTP 422) map to a clear "your own pull request" error so batch callers can skip and continue.
+- `ghafi pr merge <owner>/<repo> <number>` — merge via the direct merge endpoint (PUT `/repos/{owner}/{repo}/pulls/{number}/merge`), `--method squash|merge|rebase` (default squash), optional `--commit-title`/`--commit-message`. Dry-run by default; `--apply` commits. Same path as `gh pr merge --admin`: clears **non-required** failing checks (e.g. a non-blocking `lint`); a *required*-check / admin-locked branch-protection block maps to a clear "not mergeable" error (HTTP 405).
+- mass-approve-prs skill (`.claude/skills/mass-approve-prs/`) — composes `pr list` + `pr approve` to approve every open PR in an org matching a title heading, in one dry-run-then-apply pass; tallies approved / skipped (self-authored) / failed.
+- mass-merge-prs skill (`.claude/skills/mass-merge-prs/`) — composes `pr list` + `pr merge` to bulk-merge (default squash) every open PR matching a title heading; same dry-run-then-apply gate, tallies merged / skipped / failed.
+
+### Changed
+
+- `tests/test_mutation_safety.py` `MUTATING_VERBS` now includes `pr approve` and `pr merge`, each with a dry-run-no-write behavioral test.
+- CLAUDE.md: documented the `pr` verbs + mass approve/merge flows, the project-shape tree, and the `repo`-scope coverage for PR review/merge/read (fine-grained: "Pull requests: write", "Contents: write" for merge, "Pull requests: read").
+
+### Fixed
+
+- (Qodo review) `pr merge` now treats a `merged != true` response body as a failure (exit 4 with the API `message`) instead of reporting a phantom success — so `mass-merge-prs` can't over-count.
+- (Qodo review) `pr list` now escapes embedded `"`/`\` in `--title` before building the `in:title "…"` Search-API qualifier, preventing malformed or injected queries.
+- (Qodo review) `pr approve` / `pr merge` now reject a malformed `owner/repo` (empty owner or repo, or more than one `/`) with a clear user error instead of building an invalid API path.
+
 ## [0.2.0] - 2026-06-23
 
 ### Added

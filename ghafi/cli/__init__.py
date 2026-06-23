@@ -48,6 +48,7 @@ def _build_parser() -> argparse.ArgumentParser:
     from ghafi.cli._commands import explain as _explain
     from ghafi.cli._commands import learn as _learn
     from ghafi.cli._commands import overview as _overview
+    from ghafi.cli._commands import pr as _pr
     from ghafi.cli._commands import repo as _repo
     from ghafi.cli._commands import whoami as _whoami
 
@@ -67,6 +68,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _whoami.register(sub)
     _repo.register(sub)
     _overview.register(sub)
+    _pr.register(sub)
 
     return parser
 
