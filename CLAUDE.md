@@ -10,7 +10,7 @@ Path references in this file assume `ghafi` is checked out **alongside** its sib
 
 `ghafi` is the GitHub Agent First Interface — an AgentCulture manager that bootstraps and maintains sibling repositories on GitHub. It is the GitHub-side companion to `afi-cli` (the agent-first CLI scaffolder), `cfafi` (the CloudFlare-side manager), and `steward` (the alignment authority and skills supplier).
 
-`ghafi` v0.x focuses on **bootstrapping new aligned siblings**: create the GitHub repository, scaffold the afi-cli python-cli template, and create the `pypi` / `testpypi` GitHub Environments needed for Trusted Publishing. Future versions will grow PR / issue / label / workflow / release verbs.
+`ghafi` v0.x focuses on **bootstrapping new aligned siblings**: create the GitHub repository, scaffold the afi-cli python-cli template, and create the `pypi` / `testpypi` GitHub Environments needed for Trusted Publishing. It also carries read/maintenance verbs — `overview` (org Actions-minute usage) and `pr` (find and approve pull requests across the org). Future versions will grow issue / label / workflow / release verbs.
 
 ## Project shape
 
@@ -31,7 +31,8 @@ ghafi/                       # Python package (pip install ghafi)
 │       ├── explain.py       # ghafi explain <path>
 │       ├── whoami.py        # GET /user
 │       ├── repo.py          # repo create / scaffold / env (sub-subparsers)
-│       └── overview.py      # org Actions minute-quota usage (read-only)
+│       ├── overview.py      # org Actions minute-quota usage (read-only)
+│       └── pr.py            # pr list (read-only) / pr approve / pr merge (sub-subparsers)
 └── explain/
     ├── __init__.py          # resolve(path) → markdown
     └── catalog.py           # ENTRIES (path-tuple → markdown)
@@ -46,7 +47,7 @@ CHANGELOG.md                 # Keep-a-Changelog
 ## Build / test / publish
 
 - **Install for dev:** `uv sync`.
-- **Run CLI from source:** `uv run ghafi --version`, `uv run ghafi learn`, `uv run python -m ghafi whoami`, `uv run ghafi overview agentculture`.
+- **Run CLI from source:** `uv run ghafi --version`, `uv run ghafi learn`, `uv run python -m ghafi whoami`, `uv run ghafi overview agentculture`, `uv run ghafi pr list agentculture --title "<heading>"`.
 - **Tests:** `uv run pytest -n auto -v`. CI runs on every PR + push to main; coverage gate is 60%.
 - **Lint:** `uv run black --check ghafi tests`, `uv run isort --check-only ghafi tests`, `uv run flake8 ghafi tests`, `uv run bandit -c pyproject.toml -r ghafi`, `markdownlint-cli2 "**/*.md"`, `bash .claude/skills/pr-review/scripts/portability-lint.sh`.
 - **Version bump:** `python3 .claude/skills/version-bump/scripts/bump.py {patch|minor|major}` — updates `pyproject.toml` and prepends a CHANGELOG entry. **Required on every PR** (the `version-check` CI job comments and fails when the PR version equals main's).
@@ -60,7 +61,7 @@ If you have `gh` authenticated but no PAT exported, bridge it for one command: `
 
 Required scopes (verified against the v0.x verb set):
 
-- `repo` — create user-owned repositories, manage Environments (PUT `/repos/{owner}/{repo}/environments/{name}`), and write Actions repository permissions (PUT `/repos/{owner}/{repo}/actions/permissions`, used by `repo create` to enable workflows). All three accept classic-PAT `repo` per GitHub REST docs; this is what `gh auth login` gives you by default.
+- `repo` — create user-owned repositories, manage Environments (PUT `/repos/{owner}/{repo}/environments/{name}`), write Actions repository permissions (PUT `/repos/{owner}/{repo}/actions/permissions`, used by `repo create` to enable workflows), submit PR reviews (`ghafi pr approve` → POST `/repos/{owner}/{repo}/pulls/{number}/reviews`), and merge PRs (`ghafi pr merge` → PUT `/repos/{owner}/{repo}/pulls/{number}/merge`). It also covers the read side of `ghafi pr list` against private repos (`/search/issues` and `/repos/{owner}/{repo}/pulls`); a fine-grained token needs "Pull requests: write" for `pr approve`, "Contents: write" + "Pull requests: write" for `pr merge`, and "Pull requests: read" for `pr list`. All accept classic-PAT `repo` per GitHub REST docs; this is what `gh auth login` gives you by default. Forcing a merge past a *required* failing check additionally needs admin rights on the repo (and branch protection that doesn't lock out administrators).
 - `admin:org` — required by **two** surfaces: (1) creating **org-owned** repositories (org membership with create-repo permission is the actual gate; the scope is required for some org configurations), and (2) `ghafi overview`, which reads the enhanced-billing usage report (GET `/organizations/{org}/settings/billing/usage`) — `read:org` alone returns 403 there, and the legacy `/settings/billing/actions` endpoint was retired (HTTP 410). `overview` also reads `/orgs/{org}/repos` (privacy join) and, with `--repo`, `/repos/{owner}/{repo}/actions/runs` — both covered by `repo`.
 - `admin:repo_hook` — **not currently needed** by any v0.x verb. Would be required only if ghafi grew verbs that manage repository webhooks; the existing Environments and Actions-permissions endpoints both accept `repo` alone.
 
@@ -105,6 +106,18 @@ From "no repo" to "Trusted-Publishing-ready sibling" in four automated steps plu
 5. **Manual (one-time per project, web only):** register the trusted publisher on <https://pypi.org/manage/account/publishing/> and <https://test.pypi.org/manage/account/publishing/>, pointing at `agentculture/<name>`, workflow `publish.yml`, environment `pypi` (and `testpypi` on the test side).
 
 A `.claude/skills/bootstrap-sibling/scripts/bootstrap.sh` helper drives the full flow with a confirmation gate: it dry-runs the GitHub mutations first, then on `--apply` runs `repo create`, performs the local `git clone`, runs `repo scaffold`, and creates the `pypi` and `testpypi` environments as separate calls.
+
+## Pull-request verbs and mass actions
+
+`ghafi pr list <org>` finds PRs org-wide (via the Search API) or in one `--repo`, filtered by `--title` with `--match exact|prefix|substring`. The two write verbs act on a single PR, dry-run by default:
+
+- `ghafi pr approve <owner>/<repo> <number>` — submits an approving review. Self-authored PRs surface a clear "your own pull request" error (GitHub forbids self-approval) rather than crashing a batch.
+- `ghafi pr merge <owner>/<repo> <number>` — merges via the **direct** merge endpoint (PUT `/repos/{owner}/{repo}/pulls/{number}/merge`), `--method squash|merge|rebase` (default squash). This is the same path as `gh pr merge --admin`: it merges past **non-required** failing checks (e.g. a failing `lint` that isn't a required status check — the "unstable" red-button state). It does **not** bypass *required* checks when branch protection includes administrators; that returns HTTP 405, surfaced as a clear "not mergeable" error.
+
+These compose into mass actions: list the matches, eyeball them, then act on each. Two skills drive the full loop (`ghafi pr list … --json` to discover, then one write verb per match — dry-run by default, `--apply` to commit, tallying done / skipped / failed):
+
+- `.claude/skills/mass-approve-prs/scripts/mass-approve-prs.sh` — bulk approve.
+- `.claude/skills/mass-merge-prs/scripts/mass-merge-prs.sh` — bulk merge (`--method`, default squash); use to land a fleet of identical rollout PRs past non-blocking lint.
 
 ## Conventions in use
 

@@ -6,10 +6,13 @@
 # forwards every flag verbatim — so `recall.sh "<query>" --mode hybrid --json`
 # is exactly `eidetic recall "<query>" --mode hybrid --json`.
 #
-# The store is the files backend at ~/.eidetic/memory by default — a home-dir
-# path OUTSIDE any git worktree, so Claude and the colleague backend (which runs
-# in throwaway worktrees) read the SAME memories. Set EIDETIC_DATA_DIR to opt out
-# of sharing; set EIDETIC_MONGO_URI / NEO4J_URI + --backend for a server store.
+# The store is the files backend at a repo-local ./.eidetic by default — rooted
+# at the MAIN worktree (via git's common dir), so Claude and the colleague
+# backend (which runs in throwaway linked worktrees of the same repo) read the
+# SAME memories, while keeping memory inside the repo rather than the home
+# directory. Outside a git checkout it falls back to the eidetic CLI default.
+# Set EIDETIC_DATA_DIR to override; set EIDETIC_MONGO_URI / NEO4J_URI + --backend
+# for a server store.
 
 set -euo pipefail
 
@@ -134,6 +137,17 @@ fi
 # Default the embedding endpoint to the local model-gear embed gear. eidetic
 # falls back to a deterministic offline embedding if it's unreachable, so this
 # is safe even when the gear is down. Override by exporting these yourself.
+# ── default the store to a repo-local .eidetic at the main worktree root ────
+# Keep memory inside the repo (./.eidetic) instead of the home-dir
+# ~/.eidetic/memory. Root it at the common git dir's parent so linked worktrees
+# (the colleague backend) resolve the SAME store, preserving shared recall.
+# Outside a git checkout, leave it unset so eidetic uses its own default.
+if [ -z "${EIDETIC_DATA_DIR:-}" ]; then
+    _ed_common=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse \
+        --path-format=absolute --git-common-dir 2>/dev/null) || _ed_common=""
+    [ -n "$_ed_common" ] && export EIDETIC_DATA_DIR="$(dirname "$_ed_common")/.eidetic"
+fi
+
 : "${EIDETIC_EMBED_URL:=http://localhost:8002/v1}"
 : "${EIDETIC_EMBED_MODEL:=Qwen/Qwen3-Embedding-0.6B}"
 export EIDETIC_EMBED_URL EIDETIC_EMBED_MODEL

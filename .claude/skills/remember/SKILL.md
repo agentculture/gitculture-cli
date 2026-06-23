@@ -8,8 +8,8 @@ description: >
   dedups by content hash) — re-remembering updates in place, never duplicates.
   Stamps a `created` date on every record at ingest time. Accepts `supersedes`
   (id of the record this one replaces, for within-scope shadowing via `sweep`)
-  and `links` (list of related-memory ids). The store lives at
-  ~/.eidetic/memory (a home-dir path outside any git worktree), and the wrapper
+  and `links` (list of related-memory ids). The store lives at a repo-local
+  ./.eidetic (rooted at the main worktree, shared across linked worktrees), and the wrapper
   defaults records to this agent's PERSONAL, PRIVATE scope (`--scope ghafi
   --visibility private`, suffix read from culture.yaml) so they don't leak to a
   default/other-scope recall — Claude and the colleague backend still share them
@@ -24,8 +24,9 @@ description: >
 
 `remember` drives **`eidetic remember`**, the write half of the memory surface
 (the read half is the sibling **/recall** skill). Records you store here are
-recallable later by *any* agent on this machine — Claude or the colleague
-backend — because the default store is one shared `~/.eidetic/memory` path.
+recallable later by *any* agent working in this checkout — Claude or the
+colleague backend — because the default store is one shared repo-local
+`./.eidetic` (rooted at the main worktree, so linked worktrees share it).
 
 ## How to run
 

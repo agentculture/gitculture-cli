@@ -211,3 +211,6 @@ __marimo__/
 
 # Claude Code scheduled-task runtime artifact
 .claude/scheduled_tasks.lock
+
+# eidetic memory store (repo-local; data, not source)
+.eidetic/

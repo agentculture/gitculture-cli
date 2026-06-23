@@ -21,6 +21,9 @@ bootstrapping and maintaining sibling repositories on GitHub.
 - `ghafi repo scaffold <path>` — drop the afi-cli python-cli template.
 - `ghafi repo env <repo>` — create a Trusted-Publishing environment.
 - `ghafi overview <org>` — org Actions minute-quota usage (read-only).
+- `ghafi pr list <org>` — find/search PRs in an org (read-only).
+- `ghafi pr approve <repo> <number>` — approve a PR.
+- `ghafi pr merge <repo> <number>` — merge a PR (squash by default).
 
 ## Mutation safety
 
@@ -48,6 +51,10 @@ commit. In dry-run, ghafi prints the JSON body it would send.
 - `ghafi explain repo env`
 - `ghafi explain whoami`
 - `ghafi explain overview`
+- `ghafi explain pr`
+- `ghafi explain pr list`
+- `ghafi explain pr approve`
+- `ghafi explain pr merge`
 """
 
 _LEARN = """\
@@ -247,6 +254,136 @@ alone, and the legacy `/settings/billing/actions` endpoint is retired
 """
 
 
+_PR = """\
+# ghafi pr
+
+The `pr` noun groups pull-request verbs:
+
+- `ghafi pr list <org>` — read-only. Find open (or closed/all) PRs in an
+  org, optionally narrowed to one `--repo` and/or filtered by `--title`.
+- `ghafi pr approve <repo> <number>` — submit an approving review. Dry-run
+  by default; `--apply` commits.
+- `ghafi pr merge <repo> <number>` — merge a PR (squash by default) via the
+  direct merge endpoint. Dry-run by default; `--apply` commits.
+
+Together they drive mass actions: `pr list` discovers matching PRs, you
+review them, then `pr approve` / `pr merge` acts on each one. The write
+verbs stay single-PR and dry-run-default so every mutation is reviewable.
+
+See `ghafi explain pr list`, `ghafi explain pr approve`, and
+`ghafi explain pr merge`.
+"""
+
+_PR_LIST = """\
+# ghafi pr list <org> [--repo NAME] [--title TEXT]
+                     [--match exact|prefix|substring] [--state open|closed|all]
+                     [--json]
+
+Find pull requests in an org. Read-only — never writes.
+
+## What it does
+
+- **Without `--repo`:** scans the whole org via the Search API
+  (`GET /search/issues?q=org:<org> type:pr state:<state> in:title "<title>"`),
+  paginating up to the Search API's 1000-result cap, and keeps only PRs.
+- **With `--repo`:** lists that repo's pulls directly
+  (`GET /repos/{org}/{repo}/pulls?state=<state>`, paginated).
+
+## Title matching
+
+`--title` filters client-side (the Search API's `in:title` is fuzzy
+full-text, so results are re-checked exactly). All comparisons are
+case-insensitive and whitespace-stripped:
+
+- `exact` (default) — title equals the query.
+- `prefix` — title starts with the query (heading semantics).
+- `substring` — query appears anywhere in the title.
+
+## JSON shape
+
+    {
+      "org": str, "repo": str|null, "state": str,
+      "title": str|null, "match": str, "count": int,
+      "pull_requests": [
+        {"owner", "repo", "number", "title", "author", "url", "draft"}, ...
+      ]
+    }
+"""
+
+_PR_APPROVE = """\
+# ghafi pr approve <repo> <number> [--owner OWNER] [--body TEXT]
+                                  [--apply] [--json]
+
+Submit an approving review for one pull request.
+
+## What it does
+
+POSTs `/repos/{owner}/{repo}/pulls/{number}/reviews` with
+`{"event": "APPROVE", "body": <--body if given>}`.
+
+`<repo>` may be `owner/repo` (the split wins) or a bare name with
+`--owner`. There is no whoami fallback — an approval is always against a
+specific upstream owner, so one must be given explicitly.
+
+## Dry-run
+
+Default. Prints the JSON body that *would* POST. Pass `--apply` to submit
+the review.
+
+## Self-approval
+
+GitHub rejects approving your own PR (HTTP 422). `pr approve` maps that to
+a clear error ("it is your own pull request") so a batch caller can skip
+and continue.
+
+## JSON shape
+
+    {
+      "success": bool, "dry_run": bool,
+      "approved": "owner/repo#number",
+      "review_id": int, "review_state": "APPROVED",
+      "review_url": str
+    }
+"""
+
+
+_PR_MERGE = """\
+# ghafi pr merge <repo> <number> [--owner OWNER]
+                               [--method squash|merge|rebase]
+                               [--commit-title T] [--commit-message M]
+                               [--apply] [--json]
+
+Merge one pull request via the direct merge endpoint.
+
+## What it does
+
+PUTs `/repos/{owner}/{repo}/pulls/{number}/merge` with
+`{"merge_method": <--method>}` (default `squash`), plus optional
+`commit_title` / `commit_message` overrides.
+
+This is the *direct* merge endpoint — the same path `gh pr merge --admin`
+uses. It merges past **non-required** failing checks (e.g. a failing
+`lint` that isn't a required status check, which shows in the UI as an
+"unstable"/red merge button). It does **not** magically bypass *required*
+checks when branch protection includes administrators — that returns HTTP
+405 and is surfaced as a clear "not mergeable" error.
+
+`<repo>` may be `owner/repo` or a bare name with `--owner`.
+
+## Dry-run
+
+Default. Prints the JSON body that *would* PUT. Pass `--apply` to merge.
+
+## JSON shape
+
+    {
+      "success": bool, "dry_run": bool,
+      "merged": bool, "pr": "owner/repo#number",
+      "sha": str, "message": str
+    }
+"""
+
+
 ENTRIES: dict[tuple[str, ...], str] = {
     (): _ROOT,
     ("ghafi",): _ROOT,
@@ -258,4 +395,8 @@ ENTRIES: dict[tuple[str, ...], str] = {
     ("repo", "scaffold"): _REPO_SCAFFOLD,
     ("repo", "env"): _REPO_ENV,
     ("overview",): _OVERVIEW,
+    ("pr",): _PR,
+    ("pr", "list"): _PR_LIST,
+    ("pr", "approve"): _PR_APPROVE,
+    ("pr", "merge"): _PR_MERGE,
 }
