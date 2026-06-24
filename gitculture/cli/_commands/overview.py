@@ -1,4 +1,4 @@
-"""``ghafi overview`` — org GitHub Actions minute-quota usage breakdown.
+"""``gitculture overview`` — org GitHub Actions minute-quota usage breakdown.
 
 Read-only. Answers "why is the org near its included-minutes limit" by
 joining the enhanced-billing usage report against each repo's
@@ -19,9 +19,9 @@ from __future__ import annotations
 import argparse
 import datetime
 
-import ghafi._api as _api
-from ghafi.cli._errors import EXIT_AUTH_ERROR, EXIT_USER_ERROR, GhafiError
-from ghafi.cli._output import emit_json, emit_kv, emit_result, emit_table
+import gitculture._api as _api
+from gitculture.cli._errors import EXIT_AUTH_ERROR, EXIT_USER_ERROR, GitcultureError
+from gitculture.cli._output import emit_json, emit_kv, emit_result, emit_table
 
 # GitHub Actions included-minutes multipliers by runner OS.
 # https://docs.github.com/billing/managing-billing-for-github-actions
@@ -49,13 +49,13 @@ def _parse_month(month: str | None) -> tuple[int, int]:
         year_s, mon_s = month.split("-", 1)
         year, mon = int(year_s), int(mon_s)
     except (ValueError, AttributeError):
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"invalid --month {month!r}; expected YYYY-MM",
             remediation="pass a calendar month like --month 2026-06",
         ) from None
     if not (1 <= mon <= 12) or year < 2020:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"invalid --month {month!r}; expected YYYY-MM with month 1-12",
             remediation="pass a calendar month like --month 2026-06",
@@ -92,11 +92,11 @@ def _fetch_usage(org: str, year: int, mon: int) -> list[dict]:
             f"/organizations/{org}/settings/billing/usage",
             query={"year": year, "month": mon},
         )
-    except GhafiError as err:
+    except GitcultureError as err:
         # The enhanced-billing endpoint needs admin:org (read:org is not
         # enough). Enrich the generic auth remediation with that specifics.
         if err.code == EXIT_AUTH_ERROR:
-            raise GhafiError(
+            raise GitcultureError(
                 code=EXIT_AUTH_ERROR,
                 message=err.message,
                 remediation=(
@@ -175,7 +175,7 @@ def _overview_org(args: argparse.Namespace, year: int, mon: int) -> None:
         top = agg["repos"][0]["repo"]
         emit_result(
             f"\n_Drill into the top consumer: "
-            f"`ghafi overview {args.org} --month {month_label} --repo {top}`_",
+            f"`gitculture overview {args.org} --month {month_label} --repo {top}`_",
             json_mode=False,
         )
 
@@ -235,7 +235,7 @@ def _overview_repo(args: argparse.Namespace, year: int, mon: int) -> None:
 
 
 def cmd_overview(args: argparse.Namespace) -> None:
-    """Success path falls off the end (implicit None); errors raise GhafiError."""
+    """Success path falls off the end (implicit None); errors raise GitcultureError."""
     year, mon = _parse_month(getattr(args, "month", None))
     if getattr(args, "repo", None):
         _overview_repo(args, year, mon)

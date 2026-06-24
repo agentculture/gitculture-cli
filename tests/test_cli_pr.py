@@ -1,11 +1,11 @@
-"""ghafi pr — list (search + repo modes, title matching) and approve."""
+"""gitculture pr — list (search + repo modes, title matching) and approve."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
-from ghafi.cli._errors import EXIT_API_ERROR, EXIT_USER_ERROR, GhafiError
+from gitculture.cli import main
+from gitculture.cli._errors import EXIT_API_ERROR, EXIT_USER_ERROR, GitcultureError
 
 ORG = "agentculture"
 SEARCH_PATH = "/search/issues"
@@ -195,7 +195,7 @@ def test_pr_approve_own_pr_maps_to_clear_error(capsys, http_stub):
     http_stub.set(
         "POST",
         f"/repos/{ORG}/katvan/pulls/4/reviews",
-        GhafiError(
+        GitcultureError(
             code=EXIT_API_ERROR,
             message="GitHub API 422: Unprocessable Entity: Can not approve your own pull request",
         ),
@@ -284,7 +284,9 @@ def test_pr_merge_not_mergeable_maps_to_clear_error(capsys, http_stub):
     http_stub.set(
         "PUT",
         f"/repos/{ORG}/lobes-cli/pulls/61/merge",
-        GhafiError(code=EXIT_API_ERROR, message="GitHub API 405: Pull Request is not mergeable"),
+        GitcultureError(
+            code=EXIT_API_ERROR, message="GitHub API 405: Pull Request is not mergeable"
+        ),
     )
     rc = main(["pr", "merge", f"{ORG}/lobes-cli", "61", "--apply"])
     err = capsys.readouterr().err

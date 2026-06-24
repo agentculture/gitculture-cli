@@ -1,4 +1,4 @@
-"""``ghafi pr {list,approve}`` — find and approve pull requests.
+"""``gitculture pr {list,approve}`` — find and approve pull requests.
 
 Two verbs:
 
@@ -21,9 +21,9 @@ from __future__ import annotations
 import argparse
 import json as _json
 
-import ghafi._api as _api
-from ghafi.cli._errors import EXIT_API_ERROR, EXIT_USER_ERROR, GhafiError
-from ghafi.cli._output import emit_json, emit_kv, emit_result, emit_table
+import gitculture._api as _api
+from gitculture.cli._errors import EXIT_API_ERROR, EXIT_USER_ERROR, GitcultureError
+from gitculture.cli._output import emit_json, emit_kv, emit_result, emit_table
 
 # Title-match modes for `pr list --match`. All comparisons are
 # case-insensitive and strip surrounding whitespace.
@@ -145,7 +145,7 @@ def _list_via_search(org: str, state: str, title: str | None) -> list[dict]:
 def cmd_pr_list(args: argparse.Namespace) -> None:
     json_mode = bool(getattr(args, "json", False))
     if args.match not in _MATCH_MODES:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"invalid --match {args.match!r}; expected one of {', '.join(_MATCH_MODES)}",
             remediation="pass --match exact|prefix|substring",
@@ -205,7 +205,7 @@ def _resolve_owner_repo(args: argparse.Namespace) -> tuple[str, str]:
     if "/" in raw:
         owner, _, name = raw.partition("/")
         if not owner or not name or "/" in name:
-            raise GhafiError(
+            raise GitcultureError(
                 code=EXIT_USER_ERROR,
                 message=f"invalid repo {raw!r}: expected exactly one owner/repo",
                 remediation=(
@@ -215,7 +215,7 @@ def _resolve_owner_repo(args: argparse.Namespace) -> tuple[str, str]:
             )
         return owner, name
     if not args.owner:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"cannot resolve owner for repo {raw!r}",
             remediation="pass --owner <login> or use the owner/repo form",
@@ -264,11 +264,11 @@ def cmd_pr_approve(args: argparse.Namespace) -> None:
 
     try:
         response = _api.http_request("POST", endpoint, payload=body) or {}
-    except GhafiError as err:
+    except GitcultureError as err:
         # You cannot approve your own PR (422). Surface it as a clear,
         # non-fatal-sounding error so a batch caller can skip and continue.
         if "your own pull request" in err.message.lower():
-            raise GhafiError(
+            raise GitcultureError(
                 code=EXIT_API_ERROR,
                 message=f"cannot approve {owner}/{repo}#{args.number}: it is your own pull request",
                 remediation="approve with a different account, or skip self-authored PRs",
@@ -356,12 +356,12 @@ def cmd_pr_merge(args: argparse.Namespace) -> None:
 
     try:
         response = _api.http_request("PUT", endpoint, payload=body) or {}
-    except GhafiError as err:
+    except GitcultureError as err:
         # 405 "not mergeable" is the branch-protection / required-check wall —
         # the direct endpoint cannot bypass required checks when protection
         # includes administrators. Surface it as a clear, skippable error.
         if "not mergeable" in err.message.lower() or "405" in err.message:
-            raise GhafiError(
+            raise GitcultureError(
                 code=EXIT_API_ERROR,
                 message=f"cannot merge {owner}/{repo}#{args.number}: not mergeable",
                 remediation=(
@@ -377,7 +377,7 @@ def cmd_pr_merge(args: argparse.Namespace) -> None:
     # `merged` boolean. Treat merged != true as a failure so callers (and the
     # mass-merge skill, which counts on exit status) never over-count.
     if not response.get("merged", False):
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message=(
                 f"GitHub did not merge {owner}/{repo}#{args.number}: "

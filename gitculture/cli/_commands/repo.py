@@ -1,4 +1,4 @@
-"""``ghafi repo {create,scaffold,env}`` — bootstrap a sibling repository.
+"""``gitculture repo {create,scaffold,env}`` — bootstrap a sibling repository.
 
 Three verbs, all dry-run by default:
 
@@ -18,9 +18,9 @@ import json as _json
 import shutil
 import subprocess
 
-import ghafi._api as _api
-from ghafi.cli._errors import EXIT_API_ERROR, EXIT_ENV_ERROR, GhafiError
-from ghafi.cli._output import emit_diagnostic, emit_json, emit_kv, emit_result
+import gitculture._api as _api
+from gitculture.cli._errors import EXIT_API_ERROR, EXIT_ENV_ERROR, GitcultureError
+from gitculture.cli._output import emit_diagnostic, emit_json, emit_kv, emit_result
 
 # --------------------------------------------------------------------------- #
 # repo create
@@ -53,10 +53,10 @@ def _resolve_owner(args: argparse.Namespace) -> str:
     user = _api.http_request("GET", "/user") or {}
     login = user.get("login")
     if not login:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message="GitHub /user response missing 'login'",
-            remediation="check token validity with `ghafi whoami`",
+            remediation="check token validity with `gitculture whoami`",
         )
     return str(login)
 
@@ -102,7 +102,7 @@ def cmd_repo_create(args: argparse.Namespace) -> None:
 
     try:
         response = _api.http_request("POST", endpoint, payload=body)
-    except GhafiError as err:
+    except GitcultureError as err:
         # 422 with "name already exists" is idempotent: re-GET the repo.
         if err.code == EXIT_API_ERROR and "already exists" in err.message:
             owner = _resolve_owner(args)
@@ -162,7 +162,7 @@ def cmd_repo_create(args: argparse.Namespace) -> None:
 def _require_afi() -> str:
     afi_path = shutil.which("afi")
     if not afi_path:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_ENV_ERROR,
             message="afi binary not found on PATH",
             remediation="install afi-cli: `pip install afi-cli` or `uv tool install afi-cli`",
@@ -175,7 +175,7 @@ def cmd_repo_scaffold(args: argparse.Namespace) -> None:
     json_mode = bool(getattr(args, "json", False))
 
     if not args.apply:
-        # afi has no native dry-run — running it writes files. So ghafi's
+        # afi has no native dry-run — running it writes files. So gitculture's
         # dry-run is descriptive only.
         cmd = [afi_path, "cli", "cite", args.path, "--lang", args.lang, "--json"]
         if json_mode:
@@ -214,7 +214,7 @@ def cmd_repo_scaffold(args: argparse.Namespace) -> None:
             emit_diagnostic(f"[afi] {line}")
 
     if proc.returncode != 0:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message=f"afi cli cite exited {proc.returncode}",
             remediation=(proc.stderr.strip() or "see [afi] diagnostics on stderr"),
@@ -223,7 +223,7 @@ def cmd_repo_scaffold(args: argparse.Namespace) -> None:
     try:
         afi_report = _json.loads(proc.stdout) if proc.stdout.strip() else {}
     except _json.JSONDecodeError as exc:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message=f"afi cli cite stdout was not JSON: {exc}",
             remediation="re-run `afi cli cite <path> --lang python --json` directly to inspect",
@@ -329,7 +329,7 @@ def cmd_repo_env(args: argparse.Namespace) -> None:
                 "/deployment-branch-policies",
                 payload={"name": args.branch},
             )
-        except GhafiError as err:
+        except GitcultureError as err:
             # Branch-policy creation is best-effort; surface a diagnostic
             # but don't fail the env creation.
             emit_diagnostic(f"branch-policy create failed: {err.message}")
@@ -369,10 +369,10 @@ def _resolve_owner_for_env() -> str:
     user = _api.http_request("GET", "/user") or {}
     login = user.get("login")
     if not login:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message="GET /user response missing 'login' (cannot infer --owner)",
-            remediation="check token validity with `ghafi whoami`, or pass --owner <login>",
+            remediation="check token validity with `gitculture whoami`, or pass --owner <login>",
         )
     return str(login)
 

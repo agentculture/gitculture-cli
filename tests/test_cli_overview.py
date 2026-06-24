@@ -1,11 +1,11 @@
-"""ghafi overview — Actions quota breakdown; org table, drill-down, errors."""
+"""gitculture overview — Actions quota breakdown; org table, drill-down, errors."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
-from ghafi.cli._errors import EXIT_AUTH_ERROR, EXIT_USER_ERROR, GhafiError
+from gitculture.cli import main
+from gitculture.cli._errors import EXIT_AUTH_ERROR, EXIT_USER_ERROR, GitcultureError
 
 ORG = "agentculture"
 REPOS_PATH = f"/orgs/{ORG}/repos"
@@ -134,7 +134,7 @@ def test_overview_billing_403_enriches_admin_org_hint(capsys, http_stub):
     http_stub.set(
         "GET",
         USAGE_PATH,
-        GhafiError(code=EXIT_AUTH_ERROR, message="GitHub API 403: Resource not accessible"),
+        GitcultureError(code=EXIT_AUTH_ERROR, message="GitHub API 403: Resource not accessible"),
     )
     rc = main(["overview", ORG])
     err = capsys.readouterr().err

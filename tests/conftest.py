@@ -7,11 +7,11 @@ from typing import Any
 
 import pytest
 
-from ghafi import _api
+from gitculture import _api
 
 
 class Stub:
-    """Controllable replacement for ``ghafi._api.http_request``.
+    """Controllable replacement for ``gitculture._api.http_request``.
 
     - ``set(method, path, response_or_error)`` programs a keyed response.
     - ``queue(*items)`` stacks responses returned FIFO across calls.
@@ -97,11 +97,11 @@ def afi_stub(monkeypatch):
     stub = AfiStub()
     # Make shutil.which("afi") return a fake path so _require_afi succeeds.
     monkeypatch.setattr(
-        "ghafi.cli._commands.repo.shutil.which",
+        "gitculture.cli._commands.repo.shutil.which",
         lambda name: "/fake/bin/afi" if name == "afi" else None,
     )
     monkeypatch.setattr(
-        "ghafi.cli._commands.repo.subprocess.run",
+        "gitculture.cli._commands.repo.subprocess.run",
         stub,
     )
     return stub

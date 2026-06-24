@@ -1,7 +1,7 @@
 """Top-level CLI entry point.
 
 Noun-based subcommands register here. All errors route through
-:mod:`ghafi.cli._output` — no Python traceback ever reaches stderr.
+:mod:`gitculture.cli._output` — no Python traceback ever reaches stderr.
 Mirrors the afi-cli / cfafi parser pattern.
 """
 
@@ -10,12 +10,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-from ghafi import __version__
-from ghafi.cli._errors import EXIT_USER_ERROR, GhafiError
-from ghafi.cli._output import emit_error
+from gitculture import __version__
+from gitculture.cli._errors import EXIT_USER_ERROR, GitcultureError
+from gitculture.cli._output import emit_error
 
 
-class _GhafiArgumentParser(argparse.ArgumentParser):
+class _GitcultureArgumentParser(argparse.ArgumentParser):
     """ArgumentParser whose .error() routes through emit_error.
 
     Argparse's default error handler prints ``prog: error: <msg>`` to
@@ -29,7 +29,7 @@ class _GhafiArgumentParser(argparse.ArgumentParser):
     _json_hint: bool = False
 
     def error(self, message: str) -> None:  # type: ignore[override]
-        err = GhafiError(
+        err = GitcultureError(
             code=EXIT_USER_ERROR,
             message=message,
             remediation=f"run '{self.prog} --help' for valid arguments",
@@ -45,23 +45,23 @@ def _argv_has_json(argv: list[str] | None) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     # Deferred imports keep cli import-side effects tight.
-    from ghafi.cli._commands import explain as _explain
-    from ghafi.cli._commands import learn as _learn
-    from ghafi.cli._commands import overview as _overview
-    from ghafi.cli._commands import pr as _pr
-    from ghafi.cli._commands import repo as _repo
-    from ghafi.cli._commands import whoami as _whoami
+    from gitculture.cli._commands import explain as _explain
+    from gitculture.cli._commands import learn as _learn
+    from gitculture.cli._commands import overview as _overview
+    from gitculture.cli._commands import pr as _pr
+    from gitculture.cli._commands import repo as _repo
+    from gitculture.cli._commands import whoami as _whoami
 
-    parser = _GhafiArgumentParser(
-        prog="ghafi",
-        description="ghafi — GitHub Agent First Interface (AgentCulture manager).",
+    parser = _GitcultureArgumentParser(
+        prog="gitculture",
+        description="gitculture — GitHub Agent First Interface (AgentCulture manager).",
     )
     parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
-    sub = parser.add_subparsers(dest="command", parser_class=_GhafiArgumentParser)
+    sub = parser.add_subparsers(dest="command", parser_class=_GitcultureArgumentParser)
 
     _learn.register(sub)
     _explain.register(sub)
@@ -77,11 +77,11 @@ def _dispatch(args: argparse.Namespace) -> int:
     json_mode = bool(getattr(args, "json", False))
     try:
         rc = args.func(args)
-    except GhafiError as err:
+    except GitcultureError as err:
         emit_error(err, json_mode=json_mode)
         return err.code
     except Exception as err:  # noqa: BLE001 - wrap so no traceback leaks
-        wrapped = GhafiError(
+        wrapped = GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"unexpected: {err.__class__.__name__}: {err}",
             remediation="file a bug at https://github.com/agentculture/ghafi/issues",
@@ -92,7 +92,7 @@ def _dispatch(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    _GhafiArgumentParser._json_hint = _argv_has_json(argv)
+    _GitcultureArgumentParser._json_hint = _argv_has_json(argv)
     parser = _build_parser()
     args = parser.parse_args(argv)
     if args.command is None:

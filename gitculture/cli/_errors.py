@@ -1,8 +1,8 @@
-"""GhafiError and exit-code policy.
+"""GitcultureError and exit-code policy.
 
-Every failure inside ghafi raises :class:`GhafiError`. The top-level
-``main()`` catches it, formats via :mod:`ghafi.cli._output`, and exits
-with :attr:`GhafiError.code`. No Python traceback ever reaches stderr —
+Every failure inside gitculture raises :class:`GitcultureError`. The top-level
+``main()`` catches it, formats via :mod:`gitculture.cli._output`, and exits
+with :attr:`GitcultureError.code`. No Python traceback ever reaches stderr —
 agents can parse our error shape reliably.
 """
 
@@ -24,8 +24,8 @@ EXIT_API_ERROR = 4
 
 
 @dataclass
-class GhafiError(Exception):
-    """Structured error raised within ghafi; carries a remediation hint."""
+class GitcultureError(Exception):
+    """Structured error raised within gitculture; carries a remediation hint."""
 
     code: int
     message: str

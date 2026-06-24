@@ -13,8 +13,8 @@ import argparse
 
 import pytest
 
-from ghafi.cli import _build_parser
-from ghafi.cli import main as cli_main
+from gitculture.cli import _build_parser
+from gitculture.cli import main as cli_main
 
 # Subcommands that mutate state (GitHub or local FS) and therefore must
 # expose --apply defaulting to False. Add new mutating verbs here when
@@ -55,10 +55,10 @@ def test_mutating_verb_has_apply_default_false(verb: list[str]) -> None:
     """Structural: --apply exists on every mutating verb and defaults to False."""
     leaf = _walk_to_leaf(_build_parser(), verb)
     apply_action = _find_apply(leaf)
-    assert apply_action is not None, f"`ghafi {' '.join(verb)}` is missing --apply"
+    assert apply_action is not None, f"`gitculture {' '.join(verb)}` is missing --apply"
     assert (
         apply_action.default is False
-    ), f"`ghafi {' '.join(verb)}` --apply default must be False, got {apply_action.default!r}"
+    ), f"`gitculture {' '.join(verb)}` --apply default must be False, got {apply_action.default!r}"
 
 
 def test_repo_create_dry_run_does_not_call_api(http_stub) -> None:

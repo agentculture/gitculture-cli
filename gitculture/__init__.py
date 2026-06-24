@@ -1,4 +1,4 @@
-"""ghafi — GitHub Agent First Interface."""
+"""gitculture — GitHub Agent First Interface."""
 
 from __future__ import annotations
 
@@ -6,6 +6,6 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 
 try:
-    __version__ = _pkg_version("ghafi")
+    __version__ = _pkg_version("gitculture-cli")
 except PackageNotFoundError:  # editable install before dist-info is built
     __version__ = "0.0.0+local"

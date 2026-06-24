@@ -1,4 +1,4 @@
-# Per-machine config for ghafi's skills.
+# Per-machine config for gitculture's skills (repo: agentculture/ghafi).
 # Copy this to .claude/skills.local.yaml (git-ignored) and adjust for your
 # environment. Skills read .claude/skills.local.yaml first, falling back to
 # this example. Both files live in the .claude/ directory at the repo root.

@@ -2,16 +2,16 @@
 name: doc-test-align
 description: >
   Verify that claims in CLAUDE.md (GitHub endpoints, required scopes,
-  bootstrap step order) still match what the code in `ghafi/` actually
+  bootstrap step order) still match what the code in `gitculture/` actually
   does. Run before merging anything that touches CLAUDE.md or the
-  `ghafi.cli._commands.repo` module — catches doc drift that a normal
+  `gitculture.cli._commands.repo` module — catches doc drift that a normal
   pytest pass would not.
 ---
 
 # Doc / Test Alignment
 
 A small, opinionated drift detector. CLAUDE.md makes empirical claims
-about external systems — which GitHub REST endpoints `ghafi` calls,
+about external systems — which GitHub REST endpoints `gitculture` calls,
 which token scopes those calls require, what step order the bootstrap
 walkthrough specifies. The mutation-safety pytest catches code regressions;
 this skill catches the *documentation* equivalent.
@@ -22,7 +22,7 @@ when a new failure mode is found.
 ## When to use
 
 - Reviewer is about to approve a PR that touches `CLAUDE.md`,
-  `ghafi/cli/_commands/repo.py`, or `ghafi/_api.py`.
+  `gitculture/cli/_commands/repo.py`, or `gitculture/_api.py`.
 - Before cutting a release.
 - Periodically (e.g. quarterly) as a sweep to catch silent drift from
   GitHub API changes.
@@ -31,10 +31,10 @@ when a new failure mode is found.
 
 1. **Endpoint mentions in CLAUDE.md exist in code.** Every `/repos/...`,
    `/orgs/...`, `/user/...` URL referenced in CLAUDE.md should appear
-   somewhere in `ghafi/`. Strings only — does not validate semantics.
+   somewhere in `gitculture/`. Strings only — does not validate semantics.
 2. **Bootstrap step list matches verb set.** The "Bootstrap walkthrough"
    section should reference the same `repo {create,scaffold,env}` verbs
-   that `ghafi/cli/_commands/repo.py` registers, and no others.
+   that `gitculture/cli/_commands/repo.py` registers, and no others.
 3. **Scope list claim is empirically backed.** If CLAUDE.md says scope
    X is required, there should be a comment/test/CHANGELOG entry showing
    it was tested. (v0 just lists scopes for human review; v1 should diff

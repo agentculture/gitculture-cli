@@ -1,4 +1,4 @@
-"""``ghafi learn`` — the learnability affordance.
+"""``gitculture learn`` — the learnability affordance.
 
 Prints a structured self-teaching prompt with enough shape that an agent can
 author its own usage skill without scraping ``--help``. Also supports
@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import argparse
 
-from ghafi import __version__
-from ghafi.cli._output import emit_result
+from gitculture import __version__
+from gitculture.cli._output import emit_result
 
 _TEXT = """\
-ghafi — GitHub Agent First Interface (AgentCulture manager).
+gitculture — GitHub Agent First Interface (AgentCulture manager).
 
 Purpose
 -------
@@ -24,29 +24,29 @@ GitHub Environments needed for Trusted Publishing.
 
 Commands
 --------
-  ghafi learn                Print this self-teaching prompt. Supports --json.
-  ghafi explain <path>...    Print markdown docs for any noun/verb path.
+  gitculture learn                Print this self-teaching prompt. Supports --json.
+  gitculture explain <path>...    Print markdown docs for any noun/verb path.
                              Supports --json.
-  ghafi whoami               Verify the configured GITHUB_TOKEN.
+  gitculture whoami               Verify the configured GITHUB_TOKEN.
                              Supports --json.
-  ghafi repo create <name>   Create a new GitHub repository (under the
+  gitculture repo create <name>   Create a new GitHub repository (under the
                              authenticated user, or --org <org>). Dry-run
                              by default; --apply commits.
-  ghafi repo scaffold <path> Render the afi-cli python-cli template into
+  gitculture repo scaffold <path> Render the afi-cli python-cli template into
                              <path> by shelling out to the `afi` binary.
                              Dry-run by default; --apply commits.
-  ghafi repo env <repo>      Create a GitHub Environment (default name:
+  gitculture repo env <repo>      Create a GitHub Environment (default name:
                              pypi) wired for Trusted Publishing — no
                              secrets stored. Repeat with --name testpypi
                              for the test environment. Dry-run by
                              default; --apply commits.
-  ghafi overview <org>       Org Actions minute-quota usage (read-only).
+  gitculture overview <org>       Org Actions minute-quota usage (read-only).
                              Supports --json.
-  ghafi pr list <org>        Find/search PRs in an org (read-only); filter
+  gitculture pr list <org>        Find/search PRs in an org (read-only); filter
                              by --title / --repo / --state. Supports --json.
-  ghafi pr approve <repo> <n> Approve a pull request. Dry-run by default;
+  gitculture pr approve <repo> <n> Approve a pull request. Dry-run by default;
                              --apply submits the review.
-  ghafi pr merge <repo> <n>  Merge a pull request (squash by default) via
+  gitculture pr merge <repo> <n>  Merge a pull request (squash by default) via
                              the direct merge endpoint — clears non-required
                              failing checks (e.g. lint). Dry-run by default;
                              --apply commits.
@@ -54,7 +54,7 @@ Commands
 Mutation safety
 ---------------
 Every verb that writes to GitHub defaults to dry-run. Pass --apply to
-commit. In dry-run, ghafi prints the JSON body it would POST/PUT.
+commit. In dry-run, gitculture prints the JSON body it would POST/PUT.
 
 Authentication
 --------------
@@ -65,7 +65,7 @@ also have `admin:org`.
 
 Trusted Publishing (PyPI/TestPyPI)
 ----------------------------------
-`ghafi repo env` creates the GitHub-side Environment only. The PyPI
+`gitculture repo env` creates the GitHub-side Environment only. The PyPI
 side — registering the trusted publisher on pypi.org / test.pypi.org —
 is a one-time web flow per project. See:
   https://docs.pypi.org/trusted-publishers/
@@ -86,13 +86,13 @@ Exit-code policy
 
 More detail
 -----------
-  ghafi explain ghafi
-  ghafi explain repo
-  ghafi explain repo create
-  ghafi explain repo scaffold
-  ghafi explain repo env
-  ghafi explain overview
-  ghafi explain pr approve
+  gitculture explain gitculture
+  gitculture explain repo
+  gitculture explain repo create
+  gitculture explain repo scaffold
+  gitculture explain repo env
+  gitculture explain overview
+  gitculture explain pr approve
 
 Homepage: https://github.com/agentculture/ghafi
 """
@@ -100,7 +100,7 @@ Homepage: https://github.com/agentculture/ghafi
 
 def _as_json_payload() -> dict[str, object]:
     return {
-        "tool": "ghafi",
+        "tool": "gitculture",
         "version": __version__,
         "purpose": (
             "Bootstrap and manage AgentCulture sibling repositories on GitHub: "
@@ -154,7 +154,7 @@ def _as_json_payload() -> dict[str, object]:
         },
         "trusted_publishing_docs": "https://docs.pypi.org/trusted-publishers/",
         "json_support": True,
-        "explain_pointer": "ghafi explain <path> (e.g. 'ghafi explain repo create')",
+        "explain_pointer": "gitculture explain <path> (e.g. 'gitculture explain repo create')",
     }
 
 

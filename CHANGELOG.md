@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/). This project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-24
+
+### Added
+
+- Dual PyPI publishing: the canonical distribution is now `gitculture-cli`; a thin `ghafi` compatibility shim depends on it so `pip install ghafi` keeps installing the tool. The GitHub repo remains `agentculture/ghafi` (unchanged deployment target).
+
+### Changed
+
+- Renamed the project to `gitculture-cli`; the primary command is now `gitculture`. The `ghafi` command remains as a backward-compatible alias (both entry points invoke the same CLI).
+- Renamed the Python import package `ghafi` → `gitculture` (`python -m gitculture`). Internal `GhafiError` → `GitcultureError`, `_GhafiArgumentParser` → `_GitcultureArgumentParser`.
+
 ## [0.4.0] - 2026-06-24
 
 ### Added

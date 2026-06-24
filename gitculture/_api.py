@@ -1,7 +1,7 @@
 """HTTP helper for the GitHub REST API.
 
 Stdlib only (urllib + json). Mirrors cfafi's _api.py shape — single
-``http_request`` entry, raising :class:`GhafiError` on 4xx/5xx with
+``http_request`` entry, raising :class:`GitcultureError` on 4xx/5xx with
 401/403 mapped to EXIT_AUTH_ERROR and everything else to EXIT_API_ERROR.
 """
 
@@ -13,9 +13,9 @@ import urllib.parse
 import urllib.request
 from typing import Any, NoReturn
 
-from ghafi import __version__
-from ghafi._env import require_github_token
-from ghafi.cli._errors import EXIT_API_ERROR, EXIT_AUTH_ERROR, GhafiError
+from gitculture import __version__
+from gitculture._env import require_github_token
+from gitculture.cli._errors import EXIT_API_ERROR, EXIT_AUTH_ERROR, GitcultureError
 
 GITHUB_API_BASE = "https://api.github.com"
 
@@ -29,7 +29,7 @@ def http_request(
 ) -> dict[str, Any] | list[Any] | None:
     """Perform one GitHub API request, returning the parsed JSON body.
 
-    Returns ``None`` for 204 No Content. Raises :class:`GhafiError` on
+    Returns ``None`` for 204 No Content. Raises :class:`GitcultureError` on
     HTTP 4xx/5xx with 401/403 mapped to ``EXIT_AUTH_ERROR``, all other
     non-2xx mapped to ``EXIT_API_ERROR``. The GitHub error envelope
     (``message``) is preserved in the raised error.
@@ -44,7 +44,7 @@ def http_request(
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": f"ghafi/{__version__} (github.com/agentculture/ghafi)",
+        "User-Agent": f"gitculture/{__version__} (github.com/agentculture/ghafi)",
     }
     if payload is not None:
         body = json.dumps(payload).encode("utf-8")
@@ -62,7 +62,7 @@ def http_request(
     except urllib.error.HTTPError as exc:
         _raise_http_error(exc)
     except urllib.error.URLError as exc:
-        raise GhafiError(
+        raise GitcultureError(
             code=EXIT_API_ERROR,
             message=f"GitHub API transport failure: {exc.reason}",
             remediation="check network connectivity and api.github.com reachability",
@@ -88,7 +88,7 @@ def _raise_http_error(exc: urllib.error.HTTPError) -> NoReturn:
     errors = data.get("errors")
     if errors:
         msg = f"{msg}: {json.dumps(errors)}"
-    raise GhafiError(
+    raise GitcultureError(
         code=code_category,
         message=f"GitHub API {exc.code}: {msg}",
         remediation=remediation,

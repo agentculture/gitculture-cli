@@ -1,4 +1,4 @@
-"""Environment-variable access — the sole credential ingress for ghafi.
+"""Environment-variable access — the sole credential ingress for gitculture.
 
 Tokens are looked up in order: ``GITHUB_TOKEN`` then ``GH_TOKEN``. The
 installed CLI never reads ``.env`` or config files.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 
-from ghafi.cli._errors import EXIT_ENV_ERROR, GhafiError
+from gitculture.cli._errors import EXIT_ENV_ERROR, GitcultureError
 
 _TOKEN_ENV_NAMES = ("GITHUB_TOKEN", "GH_TOKEN")
 
@@ -18,7 +18,7 @@ def require_github_token() -> str:
         value = os.environ.get(name)
         if value:
             return value
-    raise GhafiError(
+    raise GitcultureError(
         code=EXIT_ENV_ERROR,
         message="no GitHub token in environment",
         remediation=(

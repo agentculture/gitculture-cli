@@ -1,24 +1,24 @@
-"""ghafi explain — known paths resolve, unknown paths exit non-zero."""
+"""gitculture explain — known paths resolve, unknown paths exit non-zero."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
+from gitculture.cli import main
 
 
 def test_explain_root_resolves(capsys):
     rc = main(["explain"])
     out = capsys.readouterr().out
     assert rc == 0
-    assert "ghafi" in out
+    assert "gitculture" in out
 
 
 def test_explain_repo_create_resolves(capsys):
     rc = main(["explain", "repo", "create"])
     out = capsys.readouterr().out
     assert rc == 0
-    assert "ghafi repo create" in out
+    assert "gitculture repo create" in out
     assert "--apply" in out
 
 
@@ -37,7 +37,7 @@ def test_explain_json_mode_envelope(capsys):
     payload = json.loads(capsys.readouterr().out)
     assert rc == 0
     assert payload["path"] == ["repo"]
-    assert "ghafi repo" in payload["markdown"]
+    assert "gitculture repo" in payload["markdown"]
 
 
 def test_explain_unknown_json_mode_emits_error_envelope(capsys):

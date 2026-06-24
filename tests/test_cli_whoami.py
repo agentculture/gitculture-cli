@@ -1,11 +1,11 @@
-"""ghafi whoami — auth probe; exit 2 / 3 / 0 paths."""
+"""gitculture whoami — auth probe; exit 2 / 3 / 0 paths."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
-from ghafi.cli._errors import EXIT_AUTH_ERROR, EXIT_ENV_ERROR, GhafiError
+from gitculture.cli import main
+from gitculture.cli._errors import EXIT_AUTH_ERROR, EXIT_ENV_ERROR, GitcultureError
 
 
 def test_whoami_text_emits_login(capsys, http_stub):
@@ -38,7 +38,9 @@ def test_whoami_no_token_exits_env_error(capsys, monkeypatch):
 
 def test_whoami_401_exits_auth_error(capsys, http_stub):
     http_stub.set(
-        "GET", "/user", GhafiError(code=EXIT_AUTH_ERROR, message="GitHub API 401: Bad credentials")
+        "GET",
+        "/user",
+        GitcultureError(code=EXIT_AUTH_ERROR, message="GitHub API 401: Bad credentials"),
     )
     rc = main(["whoami"])
     err = capsys.readouterr().err
