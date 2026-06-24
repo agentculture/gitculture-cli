@@ -6,13 +6,11 @@
 # forwards every flag verbatim — so `recall.sh "<query>" --mode hybrid --json`
 # is exactly `eidetic recall "<query>" --mode hybrid --json`.
 #
-# The store is the files backend at a repo-local ./.eidetic by default — rooted
-# at the MAIN worktree (via git's common dir), so Claude and the colleague
-# backend (which runs in throwaway linked worktrees of the same repo) read the
-# SAME memories, while keeping memory inside the repo rather than the home
-# directory. Outside a git checkout it falls back to the eidetic CLI default.
-# Set EIDETIC_DATA_DIR to override; set EIDETIC_MONGO_URI / NEO4J_URI + --backend
-# for a server store.
+# The store is the files backend. Default location resolves per-operation:
+# PUBLIC records inside a git repo → <repo-root>/.eidetic/memory (committed,
+# team-shared); PRIVATE records, or any record outside a git repo →
+# $HOME/.eidetic/memory (never committed). Recall reads both stores and merges.
+# An explicit EIDETIC_DATA_DIR wins and short-circuits to that single dir.
 
 set -euo pipefail
 
@@ -37,12 +35,10 @@ resolve_eidetic() {
         fi
         dir=$(dirname "$dir")
     done
-    cat >&2 <<'EOF'
-error: eidetic CLI not found.
-hint: install it with `uv tool install eidetic-cli` (or `pipx install eidetic-cli`),
-      or run from inside the eidetic-cli checkout with `uv` available.
-      The console script is `eidetic` (dist name: eidetic-cli).
-EOF
+    # In a vendored copy there is no eidetic-cli checkout to fall back to, so the
+    # only honest remedy is to install the CLI. One `error:` + one `hint:` line.
+    printf 'error: eidetic CLI not found.\n' >&2
+    printf 'hint: install it with: uv tool install eidetic-cli (or pipx install eidetic-cli); the console script is eidetic.\n' >&2
     return 1
 }
 
@@ -68,9 +64,16 @@ EOF
 }
 
 case "${1:-}" in
-    -h | --help | help | "")
+    -h | --help)
         usage
         exit 0
+        ;;
+    "")
+        # A missing query is a usage error, not success. The bareword `help` is
+        # a legitimate search term, so it is intentionally NOT a usage alias.
+        printf 'error: no query given.\n' >&2
+        printf 'hint: recall.sh "<query>" [--mode ...] [--json]; run recall.sh --help for usage.\n' >&2
+        exit 1
         ;;
 esac
 
@@ -103,9 +106,12 @@ resolve_scope() {
             # inline `# comment` or trailing space can't bleed into the scope),
             # then strip surrounding quotes only — matching the canonical parser
             # in .claude/skills/cicd/scripts/_resolve-nick.sh.
+            # `|| true`: under `set -o pipefail`, `head -n1` closing the pipe
+            # early can SIGPIPE `sed`, making the substitution non-zero and
+            # aborting the script. An empty parse must yield "" here, not exit.
             suffix=$(sed -n \
                 's/^[[:space:]]*-\{0,1\}[[:space:]]*suffix:[[:space:]]*\([^[:space:]]*\).*/\1/p' \
-                "$dir/culture.yaml" | head -n1 | tr -d "\"'")
+                "$dir/culture.yaml" | head -n1 | tr -d "\"'" || true)
             break
         fi
         dir=$(dirname "$dir")
@@ -130,24 +136,26 @@ if ! has_flag --scope "$@"; then
     EIDETIC_SCOPE=$(resolve_scope)
     if [ -n "$EIDETIC_SCOPE" ]; then
         SCOPE_ARGS+=(--scope "$EIDETIC_SCOPE")
-        has_flag --visibility "$@" || SCOPE_ARGS+=(--visibility private)
+        # rollout-cli eidetic-memory recipe POLICY OVERRIDE (not eidetic's
+        # upstream private default): default to PUBLIC, so a plain recall queries
+        # the in-repo public pool (<repo>/.eidetic/memory) this repo writes to.
+        # Pass --visibility private to also surface this agent's private ($HOME)
+        # notes. The two-store read model reads both dirs regardless.
+        has_flag --visibility "$@" || SCOPE_ARGS+=(--visibility public)
+    elif ! has_flag --visibility "$@"; then
+        # No suffix AND no explicit --visibility: the query runs against
+        # eidetic's own default (scope=default, visibility=public), not this
+        # agent's private personal scope — so an empty result isn't silently
+        # misread. Warn on stderr (stdout stays clean for --json). Warn ONLY
+        # here: an explicit --scope (outer guard) or --visibility (this guard) is
+        # a deliberate choice, honored verbatim, so either flag silences this.
+        printf 'warning: no culture.yaml suffix resolved; querying the public default scope rather than a private personal scope. Pass --scope or --visibility to target deliberately.\n' >&2
     fi
 fi
 
 # Default the embedding endpoint to the local model-gear embed gear. eidetic
 # falls back to a deterministic offline embedding if it's unreachable, so this
 # is safe even when the gear is down. Override by exporting these yourself.
-# ── default the store to a repo-local .eidetic at the main worktree root ────
-# Keep memory inside the repo (./.eidetic) instead of the home-dir
-# ~/.eidetic/memory. Root it at the common git dir's parent so linked worktrees
-# (the colleague backend) resolve the SAME store, preserving shared recall.
-# Outside a git checkout, leave it unset so eidetic uses its own default.
-if [ -z "${EIDETIC_DATA_DIR:-}" ]; then
-    _ed_common=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse \
-        --path-format=absolute --git-common-dir 2>/dev/null) || _ed_common=""
-    [ -n "$_ed_common" ] && export EIDETIC_DATA_DIR="$(dirname "$_ed_common")/.eidetic"
-fi
-
 : "${EIDETIC_EMBED_URL:=http://localhost:8002/v1}"
 : "${EIDETIC_EMBED_MODEL:=Qwen/Qwen3-Embedding-0.6B}"
 export EIDETIC_EMBED_URL EIDETIC_EMBED_MODEL
