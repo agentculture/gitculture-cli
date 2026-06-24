@@ -15,8 +15,9 @@ uv tool install gitculture-cli
 pip install gitculture-cli
 ```
 
-The package was formerly published as `ghafi`; `pip install ghafi` still works
-as a compatibility shim.
+The package was formerly published as `ghafi`; `pip install ghafi` still works —
+the same tool is published under both names (`ghafi` is a full, zero-dependency
+distribution, not a shim).
 
 ## Usage
 

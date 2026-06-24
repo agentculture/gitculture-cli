@@ -44,7 +44,7 @@ def http_request(
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": f"gitculture/{__version__} (github.com/agentculture/ghafi)",
+        "User-Agent": f"gitculture/{__version__} (github.com/agentculture/gitculture-cli)",
     }
     if payload is not None:
         body = json.dumps(payload).encode("utf-8")

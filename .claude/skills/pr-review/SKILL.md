@@ -5,7 +5,7 @@ description: >
   Copilot), triage, fix, reply, resolve. Includes a portability lint (no
   absolute /home paths, no per-user dotfile refs in committed docs) and a
   dry-run-default reminder for any GitHub-mutating change. Use when: creating
-  PRs in this repo (agentculture/ghafi), handling review feedback, or the user says "create PR",
+  PRs in this repo (agentculture/gitculture-cli), handling review feedback, or the user says "create PR",
   "review comments", "address feedback", "resolve threads".
 ---
 

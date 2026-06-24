@@ -6,22 +6,22 @@ on:
     paths:
       - "pyproject.toml"
       - "gitculture/**"
-      - "packaging/ghafi/**"
   pull_request:
     branches: [main]
     paths:
       - "pyproject.toml"
       - "gitculture/**"
-      - "packaging/ghafi/**"
 
-# Dual distribution: the canonical package is `gitculture-cli` (real code, in
-# ./pyproject.toml). `ghafi` is a compatibility shim (./packaging/ghafi) that
-# just depends on gitculture-cli. Both are published from this single repo via
-# Trusted Publishing, so BOTH PyPI projects must have a trusted publisher
-# registered for repo `agentculture/ghafi`, workflow `publish.yml`, and the
-# matching environment (pypi / testpypi). The shim's version and its
-# `gitculture-cli==` pin are re-stamped from the canonical version below, so
-# the literals committed in packaging/ghafi/pyproject.toml never drift.
+# Dual distribution: the SAME code is published under two PyPI project names —
+# `gitculture-cli` (canonical) and `ghafi` (kept for `pip install ghafi`
+# backward-compat). Both are FULL distributions built from this one repo: each
+# ships the `gitculture` package and the `gitculture` + `ghafi` console scripts,
+# and each has zero runtime dependencies (stdlib only). The `ghafi` build is
+# produced by overriding `[project].name` in pyproject.toml at build time — it is
+# NOT a shim/metapackage. Because Trusted Publishing is keyed on the
+# (repository, workflow, environment) triple, BOTH PyPI projects must have a
+# trusted publisher registered for repo `agentculture/gitculture-cli`, workflow
+# `publish.yml`, and the matching environment (pypi / testpypi).
 
 jobs:
   test:
@@ -57,22 +57,19 @@ jobs:
 
       - run: uv sync
 
-      - name: Set dev version and stamp shim
+      - name: Set dev version
         run: |
           BASE=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           DEV_VERSION="${BASE}.dev${{ github.run_number }}"
-          # Canonical distribution version.
           sed -i "s/^version = .*/version = \"${DEV_VERSION}\"/" pyproject.toml
-          # Keep the ghafi shim in lockstep (own version + dependency pin).
-          sed -i "s/^version = .*/version = \"${DEV_VERSION}\"/" packaging/ghafi/pyproject.toml
-          sed -i "s/^dependencies = .*/dependencies = [\"gitculture-cli==${DEV_VERSION}\"]/" packaging/ghafi/pyproject.toml
           echo "DEV_VERSION=${DEV_VERSION}" >> "$GITHUB_ENV"
           echo "Publishing ${DEV_VERSION} (gitculture-cli + ghafi) to TestPyPI"
 
-      - name: Build both distributions
+      - name: Build both distributions (same code, two names)
         run: |
-          uv build --out-dir dist                      # gitculture-cli
-          uv build packaging/ghafi --out-dir dist      # ghafi (shim)
+          uv build --out-dir dist                                   # gitculture-cli
+          sed -i 's/^name = "gitculture-cli"$/name = "ghafi"/' pyproject.toml
+          uv build --out-dir dist                                   # ghafi (full, no deps)
           ls -la dist
 
       - name: Publish gitculture-cli to TestPyPI
@@ -81,7 +78,7 @@ jobs:
             --trusted-publishing always --check-url https://test.pypi.org/simple/ \
             dist/gitculture_cli-*
 
-      - name: Publish ghafi shim to TestPyPI
+      - name: Publish ghafi to TestPyPI
         run: |
           uv publish --publish-url https://test.pypi.org/legacy/ \
             --trusted-publishing always --check-url https://test.pypi.org/simple/ \
@@ -91,7 +88,7 @@ jobs:
         if: always()
         run: |
           echo "::notice::Test gitculture-cli with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match gitculture-cli==${DEV_VERSION}"
-          echo "::notice::Test ghafi shim with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match ghafi==${DEV_VERSION}"
+          echo "::notice::Test ghafi with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match ghafi==${DEV_VERSION}"
 
   publish:
     if: github.event_name == 'push'
@@ -110,17 +107,11 @@ jobs:
 
       - run: uv sync
 
-      - name: Stamp shim version from canonical version
+      - name: Build both distributions (same code, two names)
         run: |
-          VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          sed -i "s/^version = .*/version = \"${VERSION}\"/" packaging/ghafi/pyproject.toml
-          sed -i "s/^dependencies = .*/dependencies = [\"gitculture-cli==${VERSION}\"]/" packaging/ghafi/pyproject.toml
-          echo "Publishing ${VERSION} (gitculture-cli + ghafi) to PyPI"
-
-      - name: Build both distributions
-        run: |
-          uv build --out-dir dist                      # gitculture-cli
-          uv build packaging/ghafi --out-dir dist      # ghafi (shim)
+          uv build --out-dir dist                                   # gitculture-cli
+          sed -i 's/^name = "gitculture-cli"$/name = "ghafi"/' pyproject.toml
+          uv build --out-dir dist                                   # ghafi (full, no deps)
           ls -la dist
 
       - name: Publish gitculture-cli to PyPI
@@ -128,7 +119,7 @@ jobs:
           uv publish --trusted-publishing always --check-url https://pypi.org/simple/ \
             dist/gitculture_cli-*
 
-      - name: Publish ghafi shim to PyPI
+      - name: Publish ghafi to PyPI
         run: |
           uv publish --trusted-publishing always --check-url https://pypi.org/simple/ \
             dist/ghafi-*

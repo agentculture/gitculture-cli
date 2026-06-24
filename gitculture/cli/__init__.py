@@ -84,7 +84,7 @@ def _dispatch(args: argparse.Namespace) -> int:
         wrapped = GitcultureError(
             code=EXIT_USER_ERROR,
             message=f"unexpected: {err.__class__.__name__}: {err}",
-            remediation="file a bug at https://github.com/agentculture/ghafi/issues",
+            remediation="file a bug at https://github.com/agentculture/gitculture-cli/issues",
         )
         emit_error(wrapped, json_mode=json_mode)
         return wrapped.code

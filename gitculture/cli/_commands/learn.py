@@ -94,7 +94,7 @@ More detail
   gitculture explain overview
   gitculture explain pr approve
 
-Homepage: https://github.com/agentculture/ghafi
+Homepage: https://github.com/agentculture/gitculture-cli
 """
 
 

@@ -1,13 +1,13 @@
 [project]
 name = "gitculture-cli"
-version = "0.5.0"
+version = "1.0.0"
 description = "gitculture — GitHub Agent First Interface; an AgentCulture manager (the gitculture CLI; formerly ghafi)."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 authors = [{name = "AgentCulture"}]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development",
@@ -16,8 +16,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/agentculture/ghafi"
-Issues = "https://github.com/agentculture/ghafi/issues"
+Homepage = "https://github.com/agentculture/gitculture-cli"
+Issues = "https://github.com/agentculture/gitculture-cli/issues"
 
 [project.scripts]
 gitculture = "gitculture.cli:main"

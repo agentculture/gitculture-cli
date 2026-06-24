@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Workspace layout assumption
 
-Path references in this file assume `ghafi` is checked out **alongside** its sibling AgentCulture projects in the same parent directory — i.e. `<workspace>/ghafi/`, `<workspace>/afi-cli/`, `<workspace>/cfafi/`, `<workspace>/steward/`. If your checkout layout differs, treat sibling paths as descriptive (they name the project, not a guaranteed filesystem location).
+Path references in this file assume `gitculture-cli` is checked out **alongside** its sibling AgentCulture projects in the same parent directory — i.e. `<workspace>/gitculture-cli/`, `<workspace>/afi-cli/`, `<workspace>/cfafi/`, `<workspace>/steward/`. If your checkout layout differs, treat sibling paths as descriptive (they name the project, not a guaranteed filesystem location).
 
 The installed CLI is **`gitculture`** (package `gitculture-cli`); the old `ghafi` command is a backward-compatible alias.
 
@@ -16,7 +16,7 @@ The installed CLI is **`gitculture`** (package `gitculture-cli`); the old `ghafi
 
 ## Project shape
 
-Distributed as **`gitculture-cli`** on PyPI (Trusted Publishing); installs the `gitculture` binary. The old `ghafi` command is retained as a backward-compatible alias (the `ghafi` shim in `packaging/ghafi/` pulls in `gitculture-cli`). Layout follows the afi-cli pattern (top-level package, no `src/`):
+Distributed as **`gitculture-cli`** on PyPI (Trusted Publishing); installs the `gitculture` binary plus a backward-compatible `ghafi` alias. The same code is **also** published under the legacy PyPI name **`ghafi`** so `pip install ghafi` keeps installing the tool — that is a full, zero-dependency distribution built from this repo by overriding `[project].name` at publish time (not a shim/metapackage; see `.github/workflows/publish.yml`). Layout follows the afi-cli pattern (top-level package, no `src/`):
 
 ```text
 gitculture/                  # Python package (pip install gitculture-cli)
@@ -53,7 +53,7 @@ CHANGELOG.md                 # Keep-a-Changelog
 - **Tests:** `uv run pytest -n auto -v`. CI runs on every PR + push to main; coverage gate is 60%.
 - **Lint:** `uv run black --check gitculture tests`, `uv run isort --check-only gitculture tests`, `uv run flake8 gitculture tests`, `uv run bandit -c pyproject.toml -r gitculture`, `markdownlint-cli2 "**/*.md"`, `bash .claude/skills/pr-review/scripts/portability-lint.sh`.
 - **Version bump:** `python3 .claude/skills/version-bump/scripts/bump.py {patch|minor|major}` — updates `pyproject.toml` and prepends a CHANGELOG entry. **Required on every PR** (the `version-check` CI job comments and fails when the PR version equals main's).
-- **Publish:** push to `main` triggers `.github/workflows/publish.yml` → `uv build` → publishes `gitculture-cli` to PyPI via Trusted Publishing (no API tokens). PRs publish a `.dev<run_number>` to TestPyPI for smoke-testing. Fork PRs are skipped (no OIDC context).
+- **Publish:** push to `main` triggers `.github/workflows/publish.yml` → `uv build` (twice, once per distribution name) → publishes **both** `gitculture-cli` and the legacy `ghafi` name to PyPI via Trusted Publishing (no API tokens). PRs publish a `.dev<run_number>` of both to TestPyPI for smoke-testing. Fork PRs are skipped (no OIDC context).
 
 ## GitHub authentication
 
@@ -75,10 +75,10 @@ Every verb that writes to GitHub **defaults to dry-run**. Pass `--apply` to comm
 
 `gitculture repo env` creates the GitHub-side Environment only. The PyPI side — registering the trusted publisher on pypi.org / test.pypi.org — is a one-time web flow per project; see <https://docs.pypi.org/trusted-publishers/>. Environments created by `gitculture repo env` store no secrets and configure no reviewers, since OIDC carries the auth.
 
-**This repo publishes TWO distributions** (see "Project shape"): the canonical `gitculture-cli` and the `ghafi` compatibility shim, both from `.github/workflows/publish.yml`. Trusted Publishing is keyed on the `(repository, workflow, environment)` triple — **not** on the artifact contents — so **each PyPI project needs its own trusted-publisher entry**, both pointing at repo `agentculture/ghafi`, workflow `publish.yml`, environment `pypi` (and `testpypi` on test.pypi.org):
+**This repo publishes the SAME code under TWO PyPI project names** (see "Project shape"): the canonical `gitculture-cli` and the legacy `ghafi`, both full zero-dependency distributions from `.github/workflows/publish.yml`. Trusted Publishing is keyed on the `(repository, workflow, environment)` triple — **not** on the artifact contents — so **each PyPI project needs its own trusted-publisher entry**, both pointing at repo `agentculture/gitculture-cli`, workflow `publish.yml`, environment `pypi` (and `testpypi` on test.pypi.org):
 
-- `ghafi` — already registered (it published the pre-rename package); the existing entry keeps working unchanged, it now just receives the shim artifact.
-- `gitculture-cli` — **new project, must be registered** on both pypi.org and test.pypi.org before the first publish, or the "Publish gitculture-cli" step fails with HTTP 403. Register it at <https://pypi.org/manage/account/publishing/> and <https://test.pypi.org/manage/account/publishing/> with owner `agentculture`, repo `ghafi`, workflow `publish.yml`, environment `pypi` / `testpypi`.
+- `ghafi` — predates the rename; update its existing trusted-publisher entry so the repository is `agentculture/gitculture-cli` (the repo was renamed; GitHub's OIDC token now carries the new slug). It then keeps receiving the full `ghafi`-named build.
+- `gitculture-cli` — register a (pending) publisher on both pypi.org and test.pypi.org, or the "Publish gitculture-cli" step fails. Register at <https://pypi.org/manage/account/publishing/> and <https://test.pypi.org/manage/account/publishing/> with owner `agentculture`, repo `gitculture-cli`, workflow `publish.yml`, environment `pypi` / `testpypi`.
 
 ## Bootstrap walkthrough (new sibling)
 
@@ -165,10 +165,10 @@ If `gitculture` grows verbs that overlap with `gh` (the GitHub CLI), favour the 
 eidetic memory **in-repo and public**: records resolve to
 `<repo-root>/.eidetic/memory` — committed, and shared with the team and mesh
 peers (the `claude` and `colleague` backends both read the same
-`ghafi` scope — the scope name tracks the repo slug `agentculture/ghafi`,
-not the CLI name, and is kept as `ghafi` so existing memories stay
-addressable), so memory travels with the repo, not a private
-home-dir store. Make it a per-task habit:
+`ghafi` scope — the eidetic scope name is kept as `ghafi` for memory
+continuity across the rename; it is independent of the CLI/repo name and
+is **not** renamed, so existing records stay addressable), so memory
+travels with the repo, not a private home-dir store. Make it a per-task habit:
 
 - **`/recall` before you start.** Search the store for the area you're about
   to touch — prior decisions, gotchas, "have we done this before?" — so you
