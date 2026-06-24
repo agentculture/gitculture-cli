@@ -1,11 +1,11 @@
-"""ghafi repo create — dry-run, --apply, --org, idempotency."""
+"""gitculture repo create — dry-run, --apply, --org, idempotency."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
-from ghafi.cli._errors import EXIT_API_ERROR, GhafiError
+from gitculture.cli import main
+from gitculture.cli._errors import EXIT_API_ERROR, GitcultureError
 
 
 def test_repo_create_dry_run_text_shows_body(capsys, http_stub):
@@ -66,7 +66,7 @@ def test_repo_create_idempotent_on_422_already_exists(capsys, http_stub):
     http_stub.set(
         "POST",
         "/user/repos",
-        GhafiError(
+        GitcultureError(
             code=EXIT_API_ERROR, message="GitHub API 422: name already exists on this account"
         ),
     )

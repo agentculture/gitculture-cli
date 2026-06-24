@@ -5,8 +5,8 @@ from __future__ import annotations
 import io
 import json
 
-from ghafi.cli._errors import EXIT_USER_ERROR, GhafiError
-from ghafi.cli._output import emit_diagnostic, emit_error, emit_kv, emit_result, emit_table
+from gitculture.cli._errors import EXIT_USER_ERROR, GitcultureError
+from gitculture.cli._output import emit_diagnostic, emit_error, emit_kv, emit_result, emit_table
 
 
 def test_emit_result_text_appends_newline():
@@ -28,14 +28,14 @@ def test_emit_result_json_writes_dict():
 
 
 def test_emit_error_text_shape():
-    err = GhafiError(code=EXIT_USER_ERROR, message="msg", remediation="hint")
+    err = GitcultureError(code=EXIT_USER_ERROR, message="msg", remediation="hint")
     stream = io.StringIO()
     emit_error(err, json_mode=False, stream=stream)
     assert stream.getvalue() == "error: msg\nhint: hint\n"
 
 
 def test_emit_error_json_shape():
-    err = GhafiError(code=EXIT_USER_ERROR, message="msg", remediation="hint")
+    err = GitcultureError(code=EXIT_USER_ERROR, message="msg", remediation="hint")
     stream = io.StringIO()
     emit_error(err, json_mode=True, stream=stream)
     assert json.loads(stream.getvalue()) == {

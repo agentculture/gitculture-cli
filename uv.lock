@@ -178,8 +178,8 @@ wheels = [
 ]
 
 [[package]]
-name = "ghafi"
-version = "0.3.0"
+name = "gitculture-cli"
+version = "1.0.0"
 source = { editable = "." }
 
 [package.dev-dependencies]

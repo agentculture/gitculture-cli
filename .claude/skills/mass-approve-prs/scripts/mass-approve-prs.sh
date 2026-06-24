@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # mass-approve-prs.sh — find every open PR in an org whose title matches a
-# heading and approve them in one pass, by composing two ghafi verbs:
+# heading and approve them in one pass, by composing two gitculture verbs:
 #
-#   ghafi pr list <org> --title <…> --match <…>   (read-only discovery)
-#   ghafi pr approve <owner>/<repo> <number>      (one approving review each)
+#   gitculture pr list <org> --title <…> --match <…>   (read-only discovery)
+#   gitculture pr approve <owner>/<repo> <number>      (one approving review each)
 #
 # Dry-run by default: it lists the matches and shows the approval each PR
 # *would* get, then exits without writing. Re-run with --apply to actually
@@ -24,10 +24,10 @@
 #   --body    TEXT   Review comment posted with each approval (signed default).
 #   --apply          Actually submit the approvals (without it: dry-run).
 #
-# Requires: python3 (stdlib only) and ghafi (installed, or run from the ghafi
-# checkout so `uv run ghafi` resolves). Auth: GITHUB_TOKEN or GH_TOKEN; the
-# script bridges `gh auth token` when neither is set. Approving PRs needs the
-# `repo` scope (classic) or fine-grained "Pull requests: write".
+# Requires: python3 (stdlib only) and gitculture (installed, or run from the
+# ghafi checkout so `uv run gitculture` resolves). Auth: GITHUB_TOKEN or
+# GH_TOKEN; the script bridges `gh auth token` when neither is set. Approving
+# PRs needs the `repo` scope (classic) or fine-grained "Pull requests: write".
 set -euo pipefail
 
 ORG="agentculture"
@@ -36,7 +36,7 @@ MATCH="exact"
 STATE="open"
 REPO=""
 APPLY=""
-BODY=$'Approved via ghafi `mass-approve-prs` skill.\n\n- Claude'
+BODY=$'Approved via gitculture `mass-approve-prs` skill.\n\n- Claude'
 
 usage() { sed -n '2,30p' "$0"; }
 
@@ -73,13 +73,13 @@ if [[ -z "${GITHUB_TOKEN:-}" && -z "${GH_TOKEN:-}" ]]; then
   fi
 fi
 
-# Resolve the ghafi entry point: prefer an installed binary, else run from the
-# checkout (four levels up: scripts → skill → skills → .claude → repo root).
+# Resolve the gitculture entry point: prefer an installed binary, else run from
+# the checkout (four levels up: scripts → skill → skills → .claude → repo root).
 REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
-if command -v ghafi >/dev/null 2>&1; then
-  GHAFI=(ghafi)
+if command -v gitculture >/dev/null 2>&1; then
+  GITCULTURE=(gitculture)
 else
-  GHAFI=(uv run --project "$REPO_ROOT" ghafi)
+  GITCULTURE=(uv run --project "$REPO_ROOT" gitculture)
 fi
 
 echo "=== Plan ==="
@@ -95,8 +95,8 @@ echo
 list_args=(pr list "$ORG" --title "$TITLE" --match "$MATCH" --state "$STATE" --json)
 [[ -n "$REPO" ]] && list_args+=(--repo "$REPO")
 
-if ! list_json="$("${GHAFI[@]}" "${list_args[@]}")"; then
-  echo "error: \`ghafi pr list\` failed (see above)" >&2
+if ! list_json="$("${GITCULTURE[@]}" "${list_args[@]}")"; then
+  echo "error: \`gitculture pr list\` failed (see above)" >&2
   exit 1
 fi
 
@@ -135,7 +135,7 @@ while IFS=$'\t' read -r owner repo number author title; do
   approve_args=(pr approve "$owner/$repo" "$number" --body "$BODY")
   [[ -n "$APPLY" ]] && approve_args+=(--apply)
 
-  if out="$("${GHAFI[@]}" "${approve_args[@]}" 2>&1)"; then
+  if out="$("${GITCULTURE[@]}" "${approve_args[@]}" 2>&1)"; then
     echo "$out"
     [[ -n "$APPLY" ]] && approved=$((approved + 1))
   else

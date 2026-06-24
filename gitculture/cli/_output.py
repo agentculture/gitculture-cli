@@ -1,7 +1,7 @@
 """stdout / stderr helpers with a strict split.
 
 Rule: results go to stdout, diagnostics and errors go to stderr. Agents
-parsing ghafi output rely on this invariant. JSON mode routes payloads
+parsing gitculture output rely on this invariant. JSON mode routes payloads
 to the same streams — never mixes them.
 """
 
@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Any, Iterable, Sequence, TextIO
 
-from ghafi.cli._errors import GhafiError
+from gitculture.cli._errors import GitcultureError
 
 
 def emit_result(data: Any, *, json_mode: bool, stream: TextIO | None = None) -> None:
@@ -27,8 +27,8 @@ def emit_result(data: Any, *, json_mode: bool, stream: TextIO | None = None) -> 
         s.write("\n")
 
 
-def emit_error(err: GhafiError, *, json_mode: bool, stream: TextIO | None = None) -> None:
-    """Write a GhafiError to stderr (or the given stream)."""
+def emit_error(err: GitcultureError, *, json_mode: bool, stream: TextIO | None = None) -> None:
+    """Write a GitcultureError to stderr (or the given stream)."""
     s = stream if stream is not None else sys.stderr
     if json_mode:
         json.dump(err.to_dict(), s, ensure_ascii=False)

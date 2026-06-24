@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh — chain `ghafi repo {create,scaffold,env}` to stand up a
+# bootstrap.sh — chain `gitculture repo {create,scaffold,env}` to stand up a
 # new AgentCulture sibling end-to-end. Dry-run by default; --apply to
 # commit. See ../SKILL.md for rationale.
 
@@ -16,7 +16,7 @@ usage() {
 Usage:
   bootstrap.sh --name <repo> --description "<…>" [--org agentculture] [--private] [--apply]
 
-Without --apply, every ghafi step prints its dry-run output and the
+Without --apply, every gitculture step prints its dry-run output and the
 script exits before performing any mutation. With --apply, the script
 runs the full bootstrap (repo create, local clone, scaffold, env pypi,
 env testpypi) with a confirmation prompt after the dry-run review.
@@ -52,7 +52,7 @@ if [[ -z "${GITHUB_TOKEN:-}" && -z "${GH_TOKEN:-}" ]]; then
   fi
 fi
 
-GHAFI=(uv run ghafi)
+GITCULTURE=(uv run gitculture)
 REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
 TARGET="$REPO_ROOT/../$NAME"
 
@@ -67,15 +67,15 @@ echo
 
 # Step 1: repo create (always dry-run first; --apply if requested)
 echo "=== Step 1: repo create (dry-run preview) ==="
-"${GHAFI[@]}" repo create --org "$ORG" --description "$DESCRIPTION" $PRIVATE "$NAME"
+"${GITCULTURE[@]}" repo create --org "$ORG" --description "$DESCRIPTION" $PRIVATE "$NAME"
 echo
 
 # Step 4 + 5 dry-run preview (envs)
 echo "=== Step 4: repo env pypi (dry-run preview) ==="
-"${GHAFI[@]}" repo env --owner "$ORG" --name pypi --branch main "$NAME"
+"${GITCULTURE[@]}" repo env --owner "$ORG" --name pypi --branch main "$NAME"
 echo
 echo "=== Step 5: repo env testpypi (dry-run preview) ==="
-"${GHAFI[@]}" repo env --owner "$ORG" --name testpypi "$NAME"
+"${GITCULTURE[@]}" repo env --owner "$ORG" --name testpypi "$NAME"
 echo
 
 if [[ -z "$APPLY" ]]; then
@@ -92,7 +92,7 @@ fi
 
 echo
 echo "=== Step 1: repo create --apply ==="
-"${GHAFI[@]}" repo create --org "$ORG" --description "$DESCRIPTION" $PRIVATE "$NAME" --apply
+"${GITCULTURE[@]}" repo create --org "$ORG" --description "$DESCRIPTION" $PRIVATE "$NAME" --apply
 
 echo
 echo "=== Step 2: git clone $ORG/$NAME → $TARGET ==="
@@ -100,15 +100,15 @@ git clone "https://github.com/$ORG/$NAME.git" "$TARGET"
 
 echo
 echo "=== Step 3: repo scaffold --apply ==="
-"${GHAFI[@]}" repo scaffold --apply "$TARGET"
+"${GITCULTURE[@]}" repo scaffold --apply "$TARGET"
 
 echo
 echo "=== Step 4: repo env pypi --apply ==="
-"${GHAFI[@]}" repo env --owner "$ORG" --name pypi --branch main --apply "$NAME"
+"${GITCULTURE[@]}" repo env --owner "$ORG" --name pypi --branch main --apply "$NAME"
 
 echo
 echo "=== Step 5: repo env testpypi --apply ==="
-"${GHAFI[@]}" repo env --owner "$ORG" --name testpypi --apply "$NAME"
+"${GITCULTURE[@]}" repo env --owner "$ORG" --name testpypi --apply "$NAME"
 
 cat <<EOF
 

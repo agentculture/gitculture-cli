@@ -1,4 +1,4 @@
-# markdownlint-cli2 config for ghafi.
+# markdownlint-cli2 config for gitculture-cli (repo: agentculture/gitculture-cli).
 # markdownlint-cli2 stops walking at the git root, so any user-global
 # config in the home directory is not picked up from inside the repo.
 # Mirrors the afi-cli / cfafi / steward preset for workspace consistency.

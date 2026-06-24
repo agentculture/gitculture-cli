@@ -1,34 +1,34 @@
-"""Markdown catalog for ``ghafi explain <path>``.
+"""Markdown catalog for ``gitculture explain <path>``.
 
 Each entry is verbatim markdown. Keys are command-path tuples. The empty
-tuple and ``("ghafi",)`` both resolve to the root entry (aliased).
+tuple and ``("gitculture",)`` both resolve to the root entry (aliased).
 """
 
 from __future__ import annotations
 
 _ROOT = """\
-# ghafi
+# gitculture
 
-ghafi is the GitHub Agent First Interface — an AgentCulture manager for
+gitculture is the GitHub Agent First Interface — an AgentCulture manager for
 bootstrapping and maintaining sibling repositories on GitHub.
 
 ## Verbs
 
-- `ghafi learn` — structured self-teaching prompt.
-- `ghafi explain <path>` — markdown docs for any noun/verb.
-- `ghafi whoami` — verify the configured GitHub token.
-- `ghafi repo create <name>` — create a new repository.
-- `ghafi repo scaffold <path>` — drop the afi-cli python-cli template.
-- `ghafi repo env <repo>` — create a Trusted-Publishing environment.
-- `ghafi overview <org>` — org Actions minute-quota usage (read-only).
-- `ghafi pr list <org>` — find/search PRs in an org (read-only).
-- `ghafi pr approve <repo> <number>` — approve a PR.
-- `ghafi pr merge <repo> <number>` — merge a PR (squash by default).
+- `gitculture learn` — structured self-teaching prompt.
+- `gitculture explain <path>` — markdown docs for any noun/verb.
+- `gitculture whoami` — verify the configured GitHub token.
+- `gitculture repo create <name>` — create a new repository.
+- `gitculture repo scaffold <path>` — drop the afi-cli python-cli template.
+- `gitculture repo env <repo>` — create a Trusted-Publishing environment.
+- `gitculture overview <org>` — org Actions minute-quota usage (read-only).
+- `gitculture pr list <org>` — find/search PRs in an org (read-only).
+- `gitculture pr approve <repo> <number>` — approve a PR.
+- `gitculture pr merge <repo> <number>` — merge a PR (squash by default).
 
 ## Mutation safety
 
 Every verb that writes to GitHub defaults to dry-run. Pass `--apply` to
-commit. In dry-run, ghafi prints the JSON body it would send.
+commit. In dry-run, gitculture prints the JSON body it would send.
 
 ## Authentication
 
@@ -45,28 +45,28 @@ commit. In dry-run, ghafi prints the JSON body it would send.
 
 ## See also
 
-- `ghafi explain repo`
-- `ghafi explain repo create`
-- `ghafi explain repo scaffold`
-- `ghafi explain repo env`
-- `ghafi explain whoami`
-- `ghafi explain overview`
-- `ghafi explain pr`
-- `ghafi explain pr list`
-- `ghafi explain pr approve`
-- `ghafi explain pr merge`
+- `gitculture explain repo`
+- `gitculture explain repo create`
+- `gitculture explain repo scaffold`
+- `gitculture explain repo env`
+- `gitculture explain whoami`
+- `gitculture explain overview`
+- `gitculture explain pr`
+- `gitculture explain pr list`
+- `gitculture explain pr approve`
+- `gitculture explain pr merge`
 """
 
 _LEARN = """\
-# ghafi learn
+# gitculture learn
 
-Prints a structured self-teaching prompt covering ghafi's purpose,
+Prints a structured self-teaching prompt covering gitculture's purpose,
 command map, exit-code policy, `--json` support, and `explain` pointer.
 
 ## Usage
 
-    ghafi learn
-    ghafi learn --json
+    gitculture learn
+    gitculture learn --json
 
 In JSON mode, emits
 `{"tool", "version", "purpose", "commands", "exit_codes", "auth",
@@ -74,22 +74,22 @@ In JSON mode, emits
 """
 
 _EXPLAIN = """\
-# ghafi explain <path>
+# gitculture explain <path>
 
 Prints markdown documentation for any noun/verb path.
 
 ## Usage
 
-    ghafi explain ghafi
-    ghafi explain repo
-    ghafi explain repo create
-    ghafi explain repo env --json
+    gitculture explain gitculture
+    gitculture explain repo
+    gitculture explain repo create
+    gitculture explain repo env --json
 
-Unknown paths exit `1` with a `hint:` pointing at `ghafi explain ghafi`.
+Unknown paths exit `1` with a `hint:` pointing at `gitculture explain gitculture`.
 """
 
 _WHOAMI = """\
-# ghafi whoami
+# gitculture whoami
 
 Verifies the configured GitHub token by calling `GET /user`. Reports the
 authenticated `login`, numeric `id`, and account `type` (User or
@@ -97,8 +97,8 @@ Organization).
 
 ## Usage
 
-    ghafi whoami
-    ghafi whoami --json
+    gitculture whoami
+    gitculture whoami --json
 
 ## Exit codes
 
@@ -108,25 +108,25 @@ Organization).
 """
 
 _REPO = """\
-# ghafi repo
+# gitculture repo
 
 The `repo` noun groups verbs that bootstrap a new AgentCulture sibling
 repository:
 
-- `ghafi repo create <name>` — create a GitHub repository under the
+- `gitculture repo create <name>` — create a GitHub repository under the
   authenticated user, or under `--org <org>`. Enables Actions and sets
   workflow permissions to `all`.
-- `ghafi repo scaffold <path>` — shell out to `afi cli cite` to render
+- `gitculture repo scaffold <path>` — shell out to `afi cli cite` to render
   the python-cli template into `<path>`.
-- `ghafi repo env <repo>` — create a GitHub Environment named `pypi`
+- `gitculture repo env <repo>` — create a GitHub Environment named `pypi`
   (default) or `testpypi` (`--name testpypi`) for Trusted Publishing.
 
-See `ghafi explain repo create`, `ghafi explain repo scaffold`, and
-`ghafi explain repo env` for details.
+See `gitculture explain repo create`, `gitculture explain repo scaffold`, and
+`gitculture explain repo env` for details.
 """
 
 _REPO_CREATE = """\
-# ghafi repo create <name> [--org ORG] [--private] [--description TEXT]
+# gitculture repo create <name> [--org ORG] [--private] [--description TEXT]
                           [--apply] [--json]
 
 Create a new GitHub repository.
@@ -159,7 +159,7 @@ actually create the repo.
 """
 
 _REPO_SCAFFOLD = """\
-# ghafi repo scaffold <path> [--lang python] [--apply] [--json]
+# gitculture repo scaffold <path> [--lang python] [--apply] [--json]
 
 Drop the afi-cli python-cli template into `<path>` by shelling out to
 the `afi` binary.
@@ -169,11 +169,11 @@ the `afi` binary.
 1. Resolves the `afi` binary on `$PATH`. If not found, exits `2` with a
    remediation pointing at `pip install afi-cli`.
 2. With `--apply`: runs `afi cli cite <path> --lang <lang> --json`,
-   parses the report, and re-emits it through ghafi's structured
+   parses the report, and re-emits it through gitculture's structured
    output.
 3. Without `--apply`: describes the planned action *without* invoking
    `afi`. (The `afi` engine has no native dry-run — running it writes
-   files unconditionally — so ghafi's dry-run is descriptive only.)
+   files unconditionally — so gitculture's dry-run is descriptive only.)
 
 ## Errors
 
@@ -182,7 +182,7 @@ the `afi` binary.
 """
 
 _REPO_ENV = """\
-# ghafi repo env <repo> [--owner OWNER] [--name pypi|testpypi|<custom>]
+# gitculture repo env <repo> [--owner OWNER] [--name pypi|testpypi|<custom>]
                        [--branch PATTERN] [--apply] [--json]
 
 Create or update a GitHub Environment for Trusted Publishing.
@@ -198,15 +198,15 @@ Create or update a GitHub Environment for Trusted Publishing.
 
 ## Owner resolution
 
-If `--owner` is omitted, ghafi calls `GET /user` to discover the
+If `--owner` is omitted, gitculture calls `GET /user` to discover the
 authenticated login and uses it as the owner.
 
 ## Both environments
 
 Run the verb twice:
 
-    ghafi repo env myproject --name pypi --apply
-    ghafi repo env myproject --name testpypi --apply
+    gitculture repo env myproject --name pypi --apply
+    gitculture repo env myproject --name testpypi --apply
 
 ## PyPI side (NOT automated)
 
@@ -217,7 +217,7 @@ one-time web flow per project. See:
 
 
 _OVERVIEW = """\
-# ghafi overview <org> [--month YYYY-MM] [--repo NAME] [--json]
+# gitculture overview <org> [--month YYYY-MM] [--repo NAME] [--json]
 
 Read-only audit of an org's GitHub Actions minute-quota usage — answers
 "why are we near our included-minutes limit".
@@ -255,27 +255,27 @@ alone, and the legacy `/settings/billing/actions` endpoint is retired
 
 
 _PR = """\
-# ghafi pr
+# gitculture pr
 
 The `pr` noun groups pull-request verbs:
 
-- `ghafi pr list <org>` — read-only. Find open (or closed/all) PRs in an
+- `gitculture pr list <org>` — read-only. Find open (or closed/all) PRs in an
   org, optionally narrowed to one `--repo` and/or filtered by `--title`.
-- `ghafi pr approve <repo> <number>` — submit an approving review. Dry-run
+- `gitculture pr approve <repo> <number>` — submit an approving review. Dry-run
   by default; `--apply` commits.
-- `ghafi pr merge <repo> <number>` — merge a PR (squash by default) via the
+- `gitculture pr merge <repo> <number>` — merge a PR (squash by default) via the
   direct merge endpoint. Dry-run by default; `--apply` commits.
 
 Together they drive mass actions: `pr list` discovers matching PRs, you
 review them, then `pr approve` / `pr merge` acts on each one. The write
 verbs stay single-PR and dry-run-default so every mutation is reviewable.
 
-See `ghafi explain pr list`, `ghafi explain pr approve`, and
-`ghafi explain pr merge`.
+See `gitculture explain pr list`, `gitculture explain pr approve`, and
+`gitculture explain pr merge`.
 """
 
 _PR_LIST = """\
-# ghafi pr list <org> [--repo NAME] [--title TEXT]
+# gitculture pr list <org> [--repo NAME] [--title TEXT]
                      [--match exact|prefix|substring] [--state open|closed|all]
                      [--json]
 
@@ -311,7 +311,7 @@ case-insensitive and whitespace-stripped:
 """
 
 _PR_APPROVE = """\
-# ghafi pr approve <repo> <number> [--owner OWNER] [--body TEXT]
+# gitculture pr approve <repo> <number> [--owner OWNER] [--body TEXT]
                                   [--apply] [--json]
 
 Submit an approving review for one pull request.
@@ -348,7 +348,7 @@ and continue.
 
 
 _PR_MERGE = """\
-# ghafi pr merge <repo> <number> [--owner OWNER]
+# gitculture pr merge <repo> <number> [--owner OWNER]
                                [--method squash|merge|rebase]
                                [--commit-title T] [--commit-message M]
                                [--apply] [--json]
@@ -386,7 +386,8 @@ Default. Prints the JSON body that *would* PUT. Pass `--apply` to merge.
 
 ENTRIES: dict[tuple[str, ...], str] = {
     (): _ROOT,
-    ("ghafi",): _ROOT,
+    ("gitculture",): _ROOT,
+    ("ghafi",): _ROOT,  # backward-compat alias — `ghafi` is still a valid command
     ("learn",): _LEARN,
     ("explain",): _EXPLAIN,
     ("whoami",): _WHOAMI,

@@ -1,10 +1,10 @@
-"""ghafi repo env — dry-run body, apply, owner fallback, branch policy."""
+"""gitculture repo env — dry-run body, apply, owner fallback, branch policy."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
+from gitculture.cli import main
 
 
 def test_env_dry_run_default_pypi(capsys, http_stub):

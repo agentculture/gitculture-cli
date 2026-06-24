@@ -2,14 +2,14 @@
 name: mass-approve-prs
 description: >
   Approve many pull requests at once across a whole GitHub org (or one repo),
-  selecting them by a title heading. Composes two ghafi verbs — `ghafi pr list`
-  (read-only org-wide search) to discover the matches and `ghafi pr approve`
-  (one approving review each) to act — so it inherits ghafi's dry-run-default
-  mutation safety: it shows every PR it *would* approve before you pass
-  --apply. Per-PR failures (most often "can't approve your own pull request")
-  are tallied, not fatal. Use when: a bot opened the same PR across many repos
-  (a dependency bump, a skills sync, a CI change) and you want to approve all
-  the still-open ones in one pass.
+  selecting them by a title heading. Composes two gitculture verbs —
+  `gitculture pr list` (read-only org-wide search) to discover the matches and
+  `gitculture pr approve` (one approving review each) to act — so it inherits
+  gitculture's dry-run-default mutation safety: it shows every PR it *would*
+  approve before you pass --apply. Per-PR failures (most often "can't approve
+  your own pull request") are tallied, not fatal. Use when: a bot opened the
+  same PR across many repos (a dependency bump, a skills sync, a CI change)
+  and you want to approve all the still-open ones in one pass.
 ---
 
 # Mass-approve PRs by title
@@ -22,11 +22,11 @@ look at first.
 
 ## The shape (why two verbs, not one)
 
-- **Discovery is read-only.** `ghafi pr list <org> --title <…>` scans the org
-  via the GitHub Search API and re-checks each title client-side (the Search
+- **Discovery is read-only.** `gitculture pr list <org> --title <…>` scans the
+  org via the GitHub Search API and re-checks each title client-side (the Search
   API's `in:title` is fuzzy, so an exact/prefix re-check kills false
   positives). Nothing is written.
-- **Approval is one reviewable mutation per PR.** `ghafi pr approve
+- **Approval is one reviewable mutation per PR.** `gitculture pr approve
   <owner>/<repo> <number>` submits a single `APPROVE` review, dry-run by
   default. Keeping the write verb single-PR is deliberate: every mutation is
   inspectable, and a batch can't half-apply some giant opaque change.
@@ -58,8 +58,8 @@ Useful flags:
 - `--repo NAME` — restrict to one repo (lists its pulls directly instead of
   searching the org).
 - `--body "<note>"` — the review comment posted with each approval. Defaults to
-  a signed note (`Approved via ghafi mass-approve-prs skill. — Claude`) so it's
-  clear an assistant approved; pass `--body ""` for a bare approval.
+  a signed note (`Approved via gitculture mass-approve-prs skill. — Claude`) so
+  it's clear an assistant approved; pass `--body ""` for a bare approval.
 
 ## Reading the result
 
@@ -82,8 +82,8 @@ PR, the JSON body it would POST. The apply run prints a summary:
 ## Requirements
 
 - `python3` (stdlib only — used to parse `pr list --json`).
-- `ghafi` on PATH, or run from the ghafi checkout (the script falls back to
-  `uv run --project <repo> ghafi`).
+- `gitculture` on PATH, or run from the `ghafi` checkout (the script falls back
+  to `uv run --project <repo> gitculture`).
 - Auth via `GITHUB_TOKEN` / `GH_TOKEN`; the script bridges `gh auth token` when
   neither is set. Approving needs the `repo` scope (classic PAT) or a
   fine-grained token with **Pull requests: write**.

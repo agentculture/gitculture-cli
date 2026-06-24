@@ -2,17 +2,17 @@
 name: mass-merge-prs
 description: >
   Merge many pull requests at once across a whole GitHub org (or one repo),
-  selecting them by a title heading. Composes two ghafi verbs — `ghafi pr list`
-  (read-only org-wide search) to discover the matches and `ghafi pr merge` (one
-  direct merge each) to act — so it inherits ghafi's dry-run-default mutation
-  safety: it shows every PR it *would* merge before you pass --apply. Uses the
-  direct merge endpoint (like `gh pr merge --admin`), so it lands PRs past
-  NON-required failing checks such as a non-blocking `lint`; PRs blocked by a
-  required check are tallied, not fatal. Use when: a bot opened the same PR
-  across many repos (a rollout, a dependency bump, a skills sync) and you want
-  to land all the still-open ones in one pass — especially when self-approval
-  is impossible (the author is your own account) so merging is the only way to
-  ship them.
+  selecting them by a title heading. Composes two gitculture verbs —
+  `gitculture pr list` (read-only org-wide search) to discover the matches and
+  `gitculture pr merge` (one direct merge each) to act — so it inherits
+  gitculture's dry-run-default mutation safety: it shows every PR it *would*
+  merge before you pass --apply. Uses the direct merge endpoint (like
+  `gh pr merge --admin`), so it lands PRs past NON-required failing checks such
+  as a non-blocking `lint`; PRs blocked by a required check are tallied, not
+  fatal. Use when: a bot opened the same PR across many repos (a rollout, a
+  dependency bump, a skills sync) and you want to land all the still-open ones
+  in one pass — especially when self-approval is impossible (the author is your
+  own account) so merging is the only way to ship them.
 ---
 
 # Mass-merge PRs by title
@@ -28,18 +28,18 @@ the only way to ship is to merge. As a repo admin you can do that directly.
 
 ## The shape (why two verbs, not one)
 
-- **Discovery is read-only.** `ghafi pr list <org> --title <…>` scans the org
-  via the GitHub Search API and re-checks each title client-side (the Search
+- **Discovery is read-only.** `gitculture pr list <org> --title <…>` scans the
+  org via the GitHub Search API and re-checks each title client-side (the Search
   API's `in:title` is fuzzy). Nothing is written.
-- **Merge is one reviewable mutation per PR.** `ghafi pr merge
+- **Merge is one reviewable mutation per PR.** `gitculture pr merge
   <owner>/<repo> <number>` PUTs the direct merge endpoint, dry-run by default.
 
 The script loops the second over the output of the first.
 
 ## What "direct merge" clears (and what it doesn't)
 
-`ghafi pr merge` uses `PUT /repos/{owner}/{repo}/pulls/{number}/merge` — the
-same path as `gh pr merge --admin`:
+`gitculture pr merge` uses `PUT /repos/{owner}/{repo}/pulls/{number}/merge` —
+the same path as `gh pr merge --admin`:
 
 - **Clears non-required failing checks.** A failing `lint` that isn't a
   *required* status check shows in the UI as an "unstable"/red merge button but
@@ -91,7 +91,8 @@ The apply run prints a summary:
 
 ## Requirements
 
-- `python3` (stdlib only), and `ghafi` on PATH (or run from the checkout).
+- `python3` (stdlib only), and `gitculture` on PATH (or run from the `ghafi`
+  checkout).
 - Auth via `GITHUB_TOKEN` / `GH_TOKEN`; the script bridges `gh auth token`.
   Merging needs `repo` (classic PAT) or fine-grained **Contents: write** +
   **Pull requests: write**. Forcing past a *required* check additionally needs

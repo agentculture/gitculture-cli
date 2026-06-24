@@ -1,13 +1,13 @@
 [project]
-name = "ghafi"
-version = "0.4.0"
-description = "ghafi — GitHub Agent First Interface; an AgentCulture manager."
+name = "gitculture-cli"
+version = "1.0.0"
+description = "gitculture — GitHub Agent First Interface; an AgentCulture manager (the gitculture CLI; formerly ghafi)."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 authors = [{name = "AgentCulture"}]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development",
@@ -16,18 +16,19 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/agentculture/ghafi"
-Issues = "https://github.com/agentculture/ghafi/issues"
+Homepage = "https://github.com/agentculture/gitculture-cli"
+Issues = "https://github.com/agentculture/gitculture-cli/issues"
 
 [project.scripts]
-ghafi = "ghafi.cli:main"
+gitculture = "gitculture.cli:main"
+ghafi = "gitculture.cli:main"  # backward-compat alias
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["ghafi"]
+packages = ["gitculture"]
 
 [dependency-groups]
 dev = [
@@ -41,8 +42,8 @@ dev = [
 ]
 
 [tool.coverage.run]
-source = ["ghafi"]
-omit = ["ghafi/__pycache__/*"]
+source = ["gitculture"]
+omit = ["gitculture/__pycache__/*"]
 
 [tool.coverage.report]
 fail_under = 60
@@ -56,7 +57,7 @@ exclude_lines = [
 [tool.isort]
 profile = "black"
 line_length = 100
-known_first_party = ["ghafi"]
+known_first_party = ["gitculture"]
 
 [tool.black]
 line-length = 100

@@ -1,10 +1,10 @@
-"""ghafi learn — text and JSON modes both work."""
+"""gitculture learn — text and JSON modes both work."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
+from gitculture.cli import main
 
 
 def test_learn_text_mentions_required_topics(capsys):
@@ -27,5 +27,5 @@ def test_learn_json_carries_required_keys(capsys):
     assert rc == 0
     for key in ("tool", "version", "purpose", "commands", "exit_codes", "json_support"):
         assert key in payload, key
-    assert payload["tool"] == "ghafi"
+    assert payload["tool"] == "gitculture"
     assert payload["json_support"] is True

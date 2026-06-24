@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check.sh — v0 doc/test alignment checker. See ../SKILL.md.
 #
-# Compares CLAUDE.md claims to ghafi/ source code. Stub: only catches a
+# Compares CLAUDE.md claims to gitculture/ source code. Stub: only catches a
 # narrow class of drift today. Extend cases as real failures surface.
 
 set -uo pipefail
@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
 CLAUDE_MD="CLAUDE.md"
-SRC_DIR="ghafi"
+SRC_DIR="gitculture"
 
 if [[ ! -f "$CLAUDE_MD" ]]; then
   echo "error: $CLAUDE_MD not found in $REPO_ROOT" >&2
@@ -22,7 +22,7 @@ drift=0
 echo "=== Check 1: endpoint prefixes in CLAUDE.md exist in $SRC_DIR/ ==="
 # Pull each endpoint URL from CLAUDE.md, strip {placeholders}, then
 # check that each non-empty static segment is referenced somewhere in
-# ghafi/. Coarse but stable.
+# gitculture/. Coarse but stable.
 endpoints=$(grep -oE '/(repos|orgs|user)(/[A-Za-z0-9_{}/.:-]+)?' "$CLAUDE_MD" | sort -u)
 if [[ -z "$endpoints" ]]; then
   echo "  (no endpoint mentions found in $CLAUDE_MD — nothing to check)"
@@ -59,7 +59,7 @@ introspect_stderr=$(mktemp)
 trap 'rm -f "$introspect_stderr"' EXIT
 if ! registered=$(uv run python -c '
 import argparse
-from ghafi.cli import _build_parser
+from gitculture.cli import _build_parser
 p = _build_parser()
 sub = next(a for a in p._actions if isinstance(a, argparse._SubParsersAction))
 repo = sub.choices["repo"]
@@ -71,13 +71,13 @@ print("\n".join(sorted(sub2.choices.keys())))
   exit 2
 fi
 registered=$(echo "$registered" | sort -u)
-mentioned=$(grep -oE 'ghafi repo [a-z]+' "$CLAUDE_MD" \
+mentioned=$(grep -oE 'gitculture repo [a-z]+' "$CLAUDE_MD" \
             | awk '{print $3}' | sort -u || true)
 echo "  registered: $(echo "$registered" | tr '\n' ' ')"
 echo "  mentioned:  $(echo "$mentioned" | tr '\n' ' ')"
 for v in $mentioned; do
   if ! grep -qx "$v" <<<"$registered"; then
-    echo "  DRIFT: $CLAUDE_MD references 'ghafi repo $v' but no such verb is registered"
+    echo "  DRIFT: $CLAUDE_MD references 'gitculture repo $v' but no such verb is registered"
     drift=1
   fi
 done

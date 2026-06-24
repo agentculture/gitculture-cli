@@ -1,17 +1,17 @@
 ---
 name: pr-review
 description: >
-  ghafi PR workflow: branch, commit, push, PR, wait for review (Qodo + Copilot),
-  triage, fix, reply, resolve. Includes a portability lint (no absolute /home
-  paths, no per-user dotfile refs in committed docs) and a dry-run-default
-  reminder for any GitHub-mutating change. Use when: creating PRs in ghafi,
-  handling review feedback, or the user says "create PR", "review comments",
-  "address feedback", "resolve threads".
+  gitculture PR workflow: branch, commit, push, PR, wait for review (Qodo +
+  Copilot), triage, fix, reply, resolve. Includes a portability lint (no
+  absolute /home paths, no per-user dotfile refs in committed docs) and a
+  dry-run-default reminder for any GitHub-mutating change. Use when: creating
+  PRs in this repo (agentculture/gitculture-cli), handling review feedback, or the user says "create PR",
+  "review comments", "address feedback", "resolve threads".
 ---
 
-# PR Review — ghafi edition
+# PR Review — gitculture edition
 
-ghafi's PRs touch GitHub-API surface (repo creation, environments,
+`gitculture`'s PRs touch GitHub-API surface (repo creation, environments,
 permissions) and AgentCulture conventions (afi-cli scaffold contract,
 Trusted Publishing wiring). The recurring bug classes:
 
@@ -48,7 +48,7 @@ Allowed carve-outs (won't be flagged):
 
 - `~/.claude/skills/<x>/scripts/` — vendored tool calls.
 - `~/.culture/` — Culture-mesh data this skill is supposed to read (kept for
-  parity with steward; ghafi doesn't use it today).
+  parity with steward; gitculture doesn't use it today).
 
 ## End-to-end flow
 
@@ -75,14 +75,14 @@ Commit/PR signature: `- Claude` (workspace convention).
 
 For every comment, decide **FIX** or **PUSHBACK** with reasoning.
 
-Default to **FIX** for: portability complaints (always valid for ghafi —
-recurring bug class), missing dry-run on a GitHub-mutating verb, missing
+Default to **FIX** for: portability complaints (always valid for this project
+— recurring bug class), missing dry-run on a GitHub-mutating verb, missing
 `learn`/`explain` entry for a new verb, test or doc requests, style nits
 aligned with workspace conventions.
 
 Default to **PUSHBACK** for: architecture opinions that conflict with
-`CLAUDE.md` (e.g., "add a runtime dep" — ghafi is stdlib-only); requests to
-add features outside the alignment scope of the current PR.
+`CLAUDE.md` (e.g., "add a runtime dep" — `gitculture` is stdlib-only); requests
+to add features outside the alignment scope of the current PR.
 
 ## Reply etiquette
 

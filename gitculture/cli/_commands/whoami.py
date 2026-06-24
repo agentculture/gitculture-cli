@@ -1,15 +1,15 @@
-"""``ghafi whoami`` — verify the configured GitHub token via GET /user."""
+"""``gitculture whoami`` — verify the configured GitHub token via GET /user."""
 
 from __future__ import annotations
 
 import argparse
 
-import ghafi._api as _api
-from ghafi.cli._output import emit_json, emit_kv, emit_result
+import gitculture._api as _api
+from gitculture.cli._output import emit_json, emit_kv, emit_result
 
 
 def cmd_whoami(args: argparse.Namespace) -> None:
-    """Success path falls off the end (implicit None); errors raise GhafiError."""
+    """Success path falls off the end (implicit None); errors raise GitcultureError."""
     response = _api.http_request("GET", "/user")
     json_mode = bool(getattr(args, "json", False))
     if json_mode:

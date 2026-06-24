@@ -5,12 +5,23 @@ on:
     branches: [main]
     paths:
       - "pyproject.toml"
-      - "ghafi/**"
+      - "gitculture/**"
   pull_request:
     branches: [main]
     paths:
       - "pyproject.toml"
-      - "ghafi/**"
+      - "gitculture/**"
+
+# Dual distribution: the SAME code is published under two PyPI project names —
+# `gitculture-cli` (canonical) and `ghafi` (kept for `pip install ghafi`
+# backward-compat). Both are FULL distributions built from this one repo: each
+# ships the `gitculture` package and the `gitculture` + `ghafi` console scripts,
+# and each has zero runtime dependencies (stdlib only). The `ghafi` build is
+# produced by overriding `[project].name` in pyproject.toml at build time — it is
+# NOT a shim/metapackage. Because Trusted Publishing is keyed on the
+# (repository, workflow, environment) triple, BOTH PyPI projects must have a
+# trusted publisher registered for repo `agentculture/gitculture-cli`, workflow
+# `publish.yml`, and the matching environment (pypi / testpypi).
 
 jobs:
   test:
@@ -52,17 +63,32 @@ jobs:
           DEV_VERSION="${BASE}.dev${{ github.run_number }}"
           sed -i "s/^version = .*/version = \"${DEV_VERSION}\"/" pyproject.toml
           echo "DEV_VERSION=${DEV_VERSION}" >> "$GITHUB_ENV"
-          echo "Publishing ${DEV_VERSION} to TestPyPI"
+          echo "Publishing ${DEV_VERSION} (gitculture-cli + ghafi) to TestPyPI"
 
-      - name: Build and publish to TestPyPI
+      - name: Build both distributions (same code, two names)
         run: |
-          uv build
-          uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always --check-url https://test.pypi.org/simple/
+          uv build --out-dir dist                                   # gitculture-cli
+          sed -i 's/^name = "gitculture-cli"$/name = "ghafi"/' pyproject.toml
+          uv build --out-dir dist                                   # ghafi (full, no deps)
+          ls -la dist
+
+      - name: Publish gitculture-cli to TestPyPI
+        run: |
+          uv publish --publish-url https://test.pypi.org/legacy/ \
+            --trusted-publishing always --check-url https://test.pypi.org/simple/ \
+            dist/gitculture_cli-*
+
+      - name: Publish ghafi to TestPyPI
+        run: |
+          uv publish --publish-url https://test.pypi.org/legacy/ \
+            --trusted-publishing always --check-url https://test.pypi.org/simple/ \
+            dist/ghafi-*
 
       - name: Print install commands
         if: always()
         run: |
-          echo "::notice::Test with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match ghafi==${DEV_VERSION}"
+          echo "::notice::Test gitculture-cli with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match gitculture-cli==${DEV_VERSION}"
+          echo "::notice::Test ghafi with: uv tool install --index-url https://test.pypi.org/simple/ --index-strategy unsafe-best-match ghafi==${DEV_VERSION}"
 
   publish:
     if: github.event_name == 'push'
@@ -81,7 +107,19 @@ jobs:
 
       - run: uv sync
 
-      - name: Build and publish to PyPI
+      - name: Build both distributions (same code, two names)
         run: |
-          uv build
-          uv publish --trusted-publishing always --check-url https://pypi.org/simple/
+          uv build --out-dir dist                                   # gitculture-cli
+          sed -i 's/^name = "gitculture-cli"$/name = "ghafi"/' pyproject.toml
+          uv build --out-dir dist                                   # ghafi (full, no deps)
+          ls -la dist
+
+      - name: Publish gitculture-cli to PyPI
+        run: |
+          uv publish --trusted-publishing always --check-url https://pypi.org/simple/ \
+            dist/gitculture_cli-*
+
+      - name: Publish ghafi to PyPI
+        run: |
+          uv publish --trusted-publishing always --check-url https://pypi.org/simple/ \
+            dist/ghafi-*

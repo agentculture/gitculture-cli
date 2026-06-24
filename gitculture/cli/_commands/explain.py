@@ -1,16 +1,16 @@
-"""``ghafi explain <path>...`` — global markdown catalog lookup."""
+"""``gitculture explain <path>...`` — global markdown catalog lookup."""
 
 from __future__ import annotations
 
 import argparse
 
-from ghafi.cli._output import emit_result
-from ghafi.explain import resolve
+from gitculture.cli._output import emit_result
+from gitculture.explain import resolve
 
 
 def cmd_explain(args: argparse.Namespace) -> int:
     path = tuple(args.path) if args.path else ()
-    markdown = resolve(path)  # raises GhafiError on miss → caught in _dispatch
+    markdown = resolve(path)  # raises GitcultureError on miss → caught in _dispatch
     json_mode = bool(getattr(args, "json", False))
     if json_mode:
         emit_result({"path": list(path), "markdown": markdown}, json_mode=True)
@@ -22,12 +22,12 @@ def cmd_explain(args: argparse.Namespace) -> int:
 def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser(
         "explain",
-        help="Print markdown docs for a noun/verb path (e.g. 'ghafi explain repo create').",
+        help="Print markdown docs for a noun/verb path (e.g. 'gitculture explain repo create').",
     )
     p.add_argument(
         "path",
         nargs="*",
-        help="Command path tokens; empty = root (same as 'ghafi').",
+        help="Command path tokens; empty = root (same as 'gitculture').",
     )
     p.add_argument("--json", action="store_true", help="Emit structured JSON.")
     p.set_defaults(func=cmd_explain)

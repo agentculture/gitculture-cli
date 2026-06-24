@@ -1,15 +1,15 @@
-"""ghafi repo scaffold — afi-missing, dry-run, apply, non-zero forwarding."""
+"""gitculture repo scaffold — afi-missing, dry-run, apply, non-zero forwarding."""
 
 from __future__ import annotations
 
 import json
 
-from ghafi.cli import main
+from gitculture.cli import main
 
 
 def test_scaffold_afi_missing_exits_env_error(capsys, monkeypatch):
     monkeypatch.setattr(
-        "ghafi.cli._commands.repo.shutil.which",
+        "gitculture.cli._commands.repo.shutil.which",
         lambda name: None,
     )
     rc = main(["repo", "scaffold", "."])

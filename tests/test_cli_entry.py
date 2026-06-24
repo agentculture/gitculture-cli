@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from ghafi import __version__
-from ghafi.cli import main
+from gitculture import __version__
+from gitculture.cli import main
 
 
 def test_version_flag_prints_version(capsys):
@@ -22,7 +22,7 @@ def test_no_args_prints_help_exit_zero(capsys):
     rc = main([])
     out = capsys.readouterr().out
     assert rc == 0
-    assert "ghafi" in out
+    assert "gitculture" in out
     assert "learn" in out
 
 
